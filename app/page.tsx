@@ -1,27 +1,14 @@
-// Menu component (Mobile-first)
-import React from 'react';
+// app/page.tsx
+import Link from "next/link";
 
-const Menu = () => {
-  const menuData = [
-    { id: 1, name: 'Burger', description: 'Delicious beef burger', price: 5.99 },
-    { id: 2, name: 'Pizza', description: 'Cheese pizza with fresh toppings', price: 8.99 },
-    { id: 3, name: 'Fries', description: 'Crispy golden fries', price: 2.99 },
-    { id: 4, name: 'Soda', description: 'Refreshing soft drink', price: 1.99 },
-  ];
-
+export default function Home() {
   return (
-    <div className="menu">
-      <h2>Menu</h2>
-      {menuData.map((item) => (
-        <div key={item.id} className="menu-item">
-          <h3>{item.name}</h3>
-          <p>{item.description}</p>
-          <p>${item.price.toFixed(2)}</p>
-          <button>Add to Cart</button>
-        </div>
-      ))}
-    </div>
+    <main>
+      <h1>Welcome to [Stall Name]</h1>
+      <p>Scan the QR code to order your favorite meals!</p>
+      <Link href="/menu">
+        <button>View Menu</button>
+      </Link>
+    </main>
   );
-};
-
-export default Menu;
+}
