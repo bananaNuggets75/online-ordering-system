@@ -1,4 +1,4 @@
-"use client"; // Required for using state & context
+"use client"; // Ensure this is at the top
 
 import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
