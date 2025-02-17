@@ -1,3 +1,5 @@
+"use client"; // Add this at the top
+
 import { createContext, useContext, useState, useEffect } from "react";
 
 // Define the shape of a cart item
@@ -20,7 +22,6 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>(() => {
-    // Load cart from local storage if available
     if (typeof window !== "undefined") {
       const savedCart = localStorage.getItem("cart");
       return savedCart ? JSON.parse(savedCart) : [];

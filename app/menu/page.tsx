@@ -14,16 +14,16 @@ const Menu: React.FC = () => {
   const { addToCart } = useCart(); // Get addToCart function
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Menu</h2>
-      <div className="grid grid-cols-1 gap-4">
+    <div className="menu-container p-4">
+      <h2 className="menu-title text-xl font-bold mb-4">Menu</h2>
+      <div className="menu-list grid grid-cols-1 gap-4">
         {menuData.map((item) => (
-          <div key={item.id} className="p-4 border rounded-lg shadow">
+          <div key={item.id} className="menu-item p-4 border rounded-lg shadow">
             <h3 className="text-lg font-semibold">{item.name}</h3>
             <p>{item.description}</p>
-            <p className="font-bold">${item.price.toFixed(2)}</p>
+            <p className="menu-price font-bold">${item.price.toFixed(2)}</p>
             <button
-            className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
+            className="add-to-cart mt-2 bg-blue-500 text-white px-4 py-2 rounded"
             onClick={() => addToCart({ ...item, quantity: 1 })} // Add quantity property
             >
               Add to Cart
