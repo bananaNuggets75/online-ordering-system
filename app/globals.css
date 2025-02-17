@@ -95,3 +95,59 @@ a {
 .add-to-cart:hover {
   background: #e65c00;
 }
+
+
+/* Sidebar */
+.burger-menu {
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px; /* Hidden by default */
+  width: 250px;
+  height: 100%;
+  background: #222;
+  color: white;
+  transition: left 0.3s ease-in-out;
+  padding-top: 50px;
+}
+
+.sidebar.open {
+  left: 0; /* Show when open */
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 15px;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
