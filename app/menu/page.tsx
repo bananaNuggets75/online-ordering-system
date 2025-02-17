@@ -21,6 +21,14 @@ const MenuPage: React.FC = () => {
 
   return (
     <div className="menu-container">
+      <div className="search-bar"> {/* Search bar */}
+        <input
+          type="text"
+          placeholder="Find nearby food"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
       <div className="menu-list">
         {filteredMenuData.map((item) => (
           <div
