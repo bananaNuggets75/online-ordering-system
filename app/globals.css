@@ -49,67 +49,119 @@ a {
 .menu-container {
   padding: 20px;
   max-width: 800px;
-  margin: auto;
-  text-align: center;
+  margin: 0 auto;
+  text-align: left;
 }
 
-.menu-title {
-  font-size: 28px;
-  font-weight: bold;
+.search-bar {
   margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px; /* Slightly more rounded */
+  font-size: 16px;
+  box-sizing: border-box;
+  padding-left: 35px; /* Add padding for search icon */
+  background-image: url("/search-icon.png"); /* Add search icon */
+  background-size: 20px;
+  background-position: 10px center;
+  background-repeat: no-repeat;
 }
 
 .menu-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
-  padding: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 0;
 }
 
 .menu-item {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: var(--background);
+  background-color: #fff; /* White background for menu items */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+  overflow: hidden; /* Ensure image stays within the container */
 }
 
 .menu-item:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
-.menu-item h3 {
-  font-size: 20px;
+.menu-item-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px 10px 0 0; /* Round only top corners */
+  margin-bottom: 10px;
+}
+
+.menu-item-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item-title-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 5px;
 }
 
-.menu-item p {
-  font-size: 14px;
-  color: #555;
+.menu-item h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .menu-price {
   font-weight: bold;
   font-size: 16px;
   color: var(--primary);
-  margin-top: 5px;
+}
+
+.menu-item-description {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+  overflow: hidden; /* Hide overflowing text */
+  text-overflow: ellipsis; /* Add ellipsis (...) for overflow */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Show only 2 lines */
+  -webkit-box-orient: vertical;
+}
+
+.menu-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .add-to-cart {
   background: var(--primary);
   color: white;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border: none;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 5px;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 500;
   transition: background 0.3s;
 }
 
 .add-to-cart:hover {
   background: var(--primary-dark);
+}
+
+.rating {
+  color: #ffc107;
+  font-size: 16px;
 }
 
 /* ========== Sidebar ========== */
@@ -227,4 +279,88 @@ a {
 
 .cart-item button:hover {
   background: var(--primary-dark);
+}
+
+.menu-details-container {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.menu-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 20px;
+  background-color: #fff; /* White background */
+}
+
+.menu-details-image {
+  width: 100%;
+  max-height: 400px; /* Increased max height */
+  object-fit: contain; /* Or cover, depending on desired effect */
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.menu-details-content {
+    text-align: center;
+}
+
+.menu-details-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.menu-details-description {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+  white-space: pre-wrap; /* Preserve line breaks */
+}
+
+.menu-details-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.quantity-controls button {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 8px 15px; /* Adjusted padding */
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.quantity-controls span {
+  margin: 0 15px; /* Adjusted margin */
+  font-size: 16px;
+}
+
+.add-to-cart { /* Re-using the same class from MenuPage */
+  /* ... (styles already defined) */
+  padding: 10px 18px; /* Slightly larger button on details page */
+  font-size: 16px;
 }

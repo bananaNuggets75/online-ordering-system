@@ -1,4 +1,4 @@
-"use client"; // ✅ Ensure this is at the very top
+"use client"; // Ensure this is at the top
 
 import { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -31,12 +31,35 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   const [lastAddedItem, setLastAddedItem] = useState<CartItem | null>(null);
+  const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
 
   useEffect(() => {
     if (lastAddedItem) {
-      toast.success(`${lastAddedItem.name} added to cart!`);
+      toast.success(`${lastAddedItem.name} added to cart!`, {
+        position: "top-center",
+        duration: 3000,
+        style: {
+          fontSize: "16px",
+          fontWeight: "bold",
+          padding: "10px",
+        },
+      });
     }
-  }, [cart]);
+  }, [lastAddedItem]);
+
+  useEffect(() => {
+    if (lastRemovedItem) {
+      toast.success(`${lastRemovedItem.name} removed from cart!`, {
+        position: "top-center",
+        duration: 3000,
+        style: {
+          fontSize: "16px",
+          fontWeight: "bold",
+          padding: "10px",
+        },
+      });
+    }
+  }, [lastRemovedItem]);
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -54,16 +77,30 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       }
       return [...prevCart, item];
     });
-
-    setLastAddedItem(item);
+    setLastAddedItem(item); // Set the last added item for the notification
   };
 
   const removeFromCart = (id: number) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+    setCart((prevCart) => {
+      const itemToRemove = prevCart.find((item) => item.id === id);
+      if (!itemToRemove) return prevCart; // Prevent errors
+
+      setLastRemovedItem(itemToRemove); // Set the last removed item for the notification
+      return prevCart.filter((item) => item.id !== id);
+    });
   };
 
   const clearCart = () => {
     setCart([]);
+    toast.success("Cart cleared!", {
+      position: "top-center",
+      duration: 3000,
+      style: {
+        fontSize: "16px",
+        fontWeight: "bold",
+        padding: "10px",
+      },
+    });
   };
 
   return (
