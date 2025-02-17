@@ -1,4 +1,5 @@
-"use client"; // Add this at the top
+"use client";
+import toast from "react-hot-toast";
 
 import { createContext, useContext, useState, useEffect } from "react";
 
@@ -37,12 +38,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
       if (existingItem) {
+        toast.success(`${item.name} quantity updated!`);
         return prevCart.map((cartItem) =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
             : cartItem
         );
       }
+      toast.success(`${item.name} added to cart!`);
       return [...prevCart, item];
     });
   };

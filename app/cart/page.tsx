@@ -1,29 +1,37 @@
 "use client"; // Required for using state & context
 
+import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 
 export default function CartPage() {
   const { cart, removeFromCart, clearCart } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; // Prevents hydration mismatch
 
   // Calculate total price
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
+    <div className="cart-container">
+      <h1 className="cart-title">Your Cart</h1>
 
       {cart.length === 0 ? (
         <p className="text-gray-500">Your cart is empty.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="cart-list">
           {cart.map((item) => (
-            <div key={item.id} className="flex justify-between items-center border-b pb-2">
+            <div key={item.id} className="cart-item">
               <div>
-                <h2 className="text-lg font-semibold">{item.name}</h2>
-                <p className="text-gray-600">₱{item.price.toFixed(2)} x {item.quantity}</p>
+                <h2>{item.name}</h2>
+                <p>₱{item.price.toFixed(2)} x {item.quantity}</p>
               </div>
               <button 
-                className="bg-red-500 text-white px-3 py-1 rounded"
+                className="remove-btn"
                 onClick={() => removeFromCart(item.id)}
               >
                 Remove
@@ -36,13 +44,13 @@ export default function CartPage() {
             <p className="text-xl font-bold">Total: ₱{totalPrice.toFixed(2)}</p>
             <div className="flex gap-2 mt-2">
               <button 
-                className="bg-gray-500 text-white px-4 py-2 rounded"
+                className="clear-cart-btn"
                 onClick={clearCart}
               >
                 Clear Cart
               </button>
               <button 
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="checkout-btn"
                 onClick={() => alert("Proceeding to checkout...")}
               >
                 Checkout
