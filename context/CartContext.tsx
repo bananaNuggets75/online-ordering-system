@@ -1,7 +1,7 @@
-"use client";
-import toast from "react-hot-toast";
+"use client"; // ✅ Ensure this is at the very top
 
 import { createContext, useContext, useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 // Define the shape of a cart item
 type CartItem = {
@@ -30,6 +30,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     return [];
   });
 
+  const [lastAddedItem, setLastAddedItem] = useState<CartItem | null>(null);
+
+  useEffect(() => {
+    if (lastAddedItem) {
+      toast.success(`${lastAddedItem.name} added to cart!`);
+    }
+  }, [cart]);
+
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
@@ -38,16 +46,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
       if (existingItem) {
-        toast.success(`${item.name} quantity updated!`);
         return prevCart.map((cartItem) =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
             : cartItem
         );
       }
-      toast.success(`${item.name} added to cart!`);
       return [...prevCart, item];
     });
+
+    setLastAddedItem(item);
   };
 
   const removeFromCart = (id: number) => {
