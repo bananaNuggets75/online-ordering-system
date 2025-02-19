@@ -4,10 +4,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
 const menuData = [
-  { id: 1, name: "Burger", description: "Delicious beef burger", price: 5.99, image: "/burger.png" },
-  { id: 2, name: "Pizza", description: "Cheese pizza with fresh toppings", price: 8.99, image: "/pizza.png" },
-  { id: 3, name: "Fries", description: "Crispy golden fries", price: 2.99, image: "/fries.png" },
-  { id: 4, name: "Soda", description: "Refreshing soft drink", price: 1.99, image: "/soda.png" },
+  { id: 1, name: "Burger", description: "Delicious beef burger", price: 5.99, image: "/burger.jpg" },
+  { id: 2, name: "Pizza", description: "Cheese pizza with fresh toppings", price: 8.99, image: "/pizza.jpg" },
+  { id: 3, name: "Fries", description: "Crispy golden fries", price: 2.99, image: "/fries.jpg" },
+  { id: 4, name: "Soda", description: "Refreshing soft drink", price: 1.99, image: "/soda.jpg" },
 ];
 
 const MenuItemDetail: React.FC = () => {
@@ -27,7 +27,7 @@ const MenuItemDetail: React.FC = () => {
           <div className="menu-details-content">
             <h2 className="menu-details-title">{menuItem.name}</h2>
             <p className="menu-details-description">{menuItem.description}</p>
-            <p className="menu-details-price">${menuItem.price.toFixed(2)}</p>
+            <p className="menu-details-price">₱{menuItem.price.toFixed(2)}</p>
             <div className="quantity-controls">
               <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
               <span>{quantity}</span>
