@@ -82,11 +82,11 @@ a {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background-color: #fff; /* White background for menu items */
+  background-color: #0a0a0a; 
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
   cursor: pointer;
-  overflow: hidden; /* Ensure image stays within the container */
+  overflow: hidden; 
 }
 
 .menu-item:hover {

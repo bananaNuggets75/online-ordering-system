@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
 const menuData = [
-  { id: 1, name: "Burger", description: "Delicious beef burger", price: 5.99, image: "/burger.png" },
-  { id: 2, name: "Pizza", description: "Cheese pizza with fresh toppings", price: 8.99, image: "/pizza.png" },
-  { id: 3, name: "Fries", description: "Crispy golden fries", price: 2.99, image: "/fries.png" },
-  { id: 4, name: "Soda", description: "Refreshing soft drink", price: 1.99, image: "/soda.png" },
+  { id: 1, name: "Burger", description: "Delicious beef burger", price: 120.99, image: "/burger.jpg" },
+  { id: 2, name: "Pizza", description: "Cheese pizza with fresh toppings", price: 350.00, image: "/pizza.jpg" },
+  { id: 3, name: "Fries", description: "Crispy golden fries", price: 79.99, image: "/fries.jpg" },
+  { id: 4, name: "Soda", description: "Refreshing soft drink", price: 25.00, image: "/coke.jpg" },
 ];
 
 const MenuPage: React.FC = () => {
@@ -40,7 +40,7 @@ const MenuPage: React.FC = () => {
             <div className="menu-item-content">
               <div className="menu-item-title-price"> {/* Title and price side by side */}
                 <h3>{item.name}</h3>
-                <p className="menu-price">${item.price.toFixed(2)}</p>
+                <p className="menu-price">₱{item.price.toFixed(2)}</p>
               </div>
               <p className="menu-item-description">{item.description}</p>
               <div className="menu-item-actions"> {/* Add to cart and rating */}
