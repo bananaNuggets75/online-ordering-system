@@ -82,11 +82,11 @@ a {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background-color: #fff; /* White background for menu items */
+  background-color: #141414; 
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
   cursor: pointer;
-  overflow: hidden; /* Ensure image stays within the container */
+  overflow: hidden; 
 }
 
 .menu-item:hover {
@@ -303,7 +303,7 @@ a {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
-  background-color: #fff; /* White background */
+  background-color: #141414; 
 }
 
 .menu-details-image {
@@ -364,3 +364,31 @@ a {
   padding: 10px 18px; /* Slightly larger button on details page */
   font-size: 16px;
 }
+
+
+.checkout-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.checkout-button {
+  background: var(--primary);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.checkout-button:hover {
+  background: var(--primary-dark);
+}
+
+.checkout-button:disabled {
+  background: gray;
+  cursor: not-allowed;
+}
+

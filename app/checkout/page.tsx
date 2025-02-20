@@ -1,10 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { toast } from "react-hot-toast";
+import { FieldValue } from "firebase/firestore";
+
+interface CustomerInfo {
+    name: string;
+    contact: string;
+  }
+  
+  interface OrderItem {
+    id: number;
+    name: string;
+    quantity: number;
+    price: number;
+  }
+  
+  interface Order {
+    items: OrderItem[];
+    customerInfo: CustomerInfo;
+    status: string;
+    timestamp: FieldValue;
+  }
 
 export default function CartPage() {
   const { cart, removeFromCart, clearCart } = useCart();
@@ -14,31 +34,32 @@ export default function CartPage() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null; // Prevent hydration mismatch
+  if (!mounted) return null; // Prevents hydration mismatch
 
   // Calculate total price
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // Handle order placement
   const placeOrder = async () => {
     if (cart.length === 0) {
       toast.error("Your cart is empty!");
       return;
     }
 
-    try {
-      await addDoc(collection(db, "orders"), {
-        items: cart,
-        customerInfo: {
-          name: "John Doe", // Replace with actual user data
-          contact: "john.doe@example.com",
-        },
-        status: "Received",
-        timestamp: serverTimestamp(),
-      });
+    // Create an order object with types
+    const newOrder: Order = {
+      items: cart,
+      customerInfo: {
+        name: "John Doe", // Replace with actual user info
+        contact: "john.doe@example.com",
+      },
+      status: "Received",
+      timestamp: serverTimestamp(),
+    };
 
+    try {
+      await addDoc(collection(db, "orders"), newOrder);
       toast.success("Order Placed!");
-      clearCart(); // Clear cart after successful order
+      clearCart();
     } catch (error) {
       toast.error("Failed to place order");
       console.error("Order error:", error);
@@ -67,15 +88,21 @@ export default function CartPage() {
               </button>
             </div>
           ))}
-
+          
           {/* Total Price & Actions */}
           <div className="mt-4">
             <p className="text-xl font-bold">Total: ₱{totalPrice.toFixed(2)}</p>
             <div className="flex gap-2 mt-2">
-              <button className="clear-cart-btn" onClick={clearCart}>
+              <button 
+                className="clear-cart-btn"
+                onClick={clearCart}
+              >
                 Clear Cart
               </button>
-              <button className="checkout-btn" onClick={placeOrder}>
+              <button 
+                className="checkout-btn"
+                onClick={placeOrder}
+              >
                 Place Order
               </button>
             </div>
