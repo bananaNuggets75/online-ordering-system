@@ -1,7 +1,7 @@
 import Sidebar from "@/components/SideBar";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
-import { Toaster } from "react-hot-toast"; // Import Toaster
+import { Toaster } from "react-hot-toast"; 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

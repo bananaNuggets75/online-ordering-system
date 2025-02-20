@@ -6,24 +6,24 @@ import { db } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 
-interface OrderItem {
-  id: number;
-  name: string;
-  quantity: number;
-  price: number;
-}
-
 interface CustomerInfo {
-  name: string;
-  contact: string;
-}
-
-interface Order {
-  items: OrderItem[];
-  customerInfo: CustomerInfo;
-  status: string;
-  timestamp: any; // Firestore timestamp
-}
+    name: string;
+    contact: string;
+  }
+  
+  interface OrderItem {
+    id: number;
+    name: string;
+    quantity: number;
+    price: number;
+  }
+  
+  interface Order {
+    items: OrderItem[];
+    customerInfo: CustomerInfo;
+    status: string;
+    timestamp: any;
+  }
 
 export default function CartPage() {
   const { cart, removeFromCart, clearCart } = useCart();
