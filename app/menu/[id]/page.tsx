@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import Image from "next/image";
 
 const menuData = [
   { id: 1, name: "Burger", description: "Delicious beef burger", price: 5.99, image: "/burger.jpg" },
@@ -23,7 +24,7 @@ const MenuItemDetail: React.FC = () => {
       <div className="menu-details-container"> {/* Main container for details */}
         <button onClick={() => router.back()} className="back-button">Back</button>
         <div className="menu-details">
-          <img src={menuItem.image} alt={menuItem.name} className="menu-details-image" />
+          <Image src={menuItem.image} alt={menuItem.name} className="menu-details-image" width={300} height={200} priority />
           <div className="menu-details-content">
             <h2 className="menu-details-title">{menuItem.name}</h2>
             <p className="menu-details-description">{menuItem.description}</p>

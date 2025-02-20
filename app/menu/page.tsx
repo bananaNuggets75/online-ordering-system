@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import Image from "next/image";
 
 const menuData = [
   { id: 1, name: "Burger", description: "Delicious beef burger", price: 120.99, image: "/burger.jpg" },
@@ -36,7 +37,7 @@ const MenuPage: React.FC = () => {
             className="menu-item"
             onClick={() => router.push(`/menu/${item.id}`)}
           >
-            <img src={item.image} alt={item.name} className="menu-item-image" />
+            <Image src={item.image} alt={item.name} className="menu-item-image" width={300} height={200} priority />
             <div className="menu-item-content">
               <div className="menu-item-title-price"> {/* Title and price side by side */}
                 <h3>{item.name}</h3>

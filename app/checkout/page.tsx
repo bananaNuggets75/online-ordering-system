@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-hot-toast";
+import { FieldValue } from "firebase/firestore";
 
 interface CustomerInfo {
     name: string;
@@ -22,7 +23,7 @@ interface CustomerInfo {
     items: OrderItem[];
     customerInfo: CustomerInfo;
     status: string;
-    timestamp: any;
+    timestamp: FieldValue;
   }
 
 export default function CartPage() {
