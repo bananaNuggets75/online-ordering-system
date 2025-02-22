@@ -24,7 +24,7 @@ const Sidebar: React.FC = () => {
               <Link href="/cart" onClick={() => setIsOpen(false)}>🛒 Cart</Link>
             </li>
             <li>
-              <Link href="/order-status" onClick={() => setIsOpen(false)}>📦 Order Status</Link>
+            <Link href="/order-status" onClick={() => setIsOpen(false)}>📦 Order Status</Link>
             </li>
           </ul>
         </nav>
