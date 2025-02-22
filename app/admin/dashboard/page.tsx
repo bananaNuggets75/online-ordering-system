@@ -4,30 +4,39 @@ import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
-
-const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
+import { onAuthStateChanged, getIdTokenResult } from "firebase/auth";
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser || currentUser.uid !== ADMIN_UID) {
+      if (!currentUser) {
         router.push("/admin/login");
         return;
       }
-      setUser(currentUser);
+      try {
+        const tokenResult = await getIdTokenResult(currentUser);
+        if (tokenResult.claims.admin) {
+          setUser(currentUser);
+          setIsAdmin(true);
+        } else {
+          router.push("/admin/login");
+        }
+      } catch (error) {
+        console.error("Error fetching custom claims: ", error);
+        router.push("/admin/login");
+      }
     });
-
     return () => unsubscribe();
   }, [router]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isAdmin) return;
     const fetchOrders = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "orders"));
@@ -41,7 +50,7 @@ const AdminDashboard = () => {
     };
 
     fetchOrders();
-  }, [user]);
+  }, [user, isAdmin]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -56,29 +65,41 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white rounded shadow">
+    <div className="p-6 max-w-5xl mx-auto bg-white rounded shadow">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
       {loading ? (
         <p>Loading orders...</p>
       ) : (
-        <ul>
-          {orders.map((order) => (
-            <li key={order.id} className="p-4 border rounded mb-2">
-              <p><strong>Order ID:</strong> {order.id}</p>
-              <p><strong>Customer:</strong> {order.customerName}</p>
-              <p><strong>Status:</strong> {order.status}</p>
-              <select
-                value={order.status}
-                onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                className="border p-1 rounded"
-              >
-                <option value="Pending">Pending</option>
-                <option value="In-Process">In-Process</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </li>
-          ))}
-        </ul>
+        <table className="w-full border-collapse border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2">Order ID</th>
+              <th className="border p-2">Customer</th>
+              <th className="border p-2">Status</th>
+              <th className="border p-2">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.id} className="border">
+                <td className="border p-2">{order.id}</td>
+                <td className="border p-2">{order.customerName}</td>
+                <td className="border p-2">{order.status}</td>
+                <td className="border p-2">
+                  <select
+                    value={order.status}
+                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                    className="border p-1 rounded"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="In-Process">In-Process</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
