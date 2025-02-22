@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, getIdTokenResult, User } from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
+
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; // Ensure this is set
 
 interface Order {
   id: string;
@@ -16,33 +18,33 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Auth state changed:", currentUser?.uid);
+      
       if (!currentUser) {
+        console.log("No user logged in. Redirecting to login...");
         router.push("/admin/login");
         return;
       }
-      try {
-        const tokenResult = await getIdTokenResult(currentUser);
-        if (tokenResult.claims.admin) {
-          setUser(currentUser);
-          setIsAdmin(true);
-        } else {
-          router.push("/admin/login");
-        }
-      } catch (error) {
-        console.error("Error fetching custom claims: ", error);
+
+      if (currentUser.uid !== ADMIN_UID) {
+        console.log("Unauthorized user:", currentUser.uid);
         router.push("/admin/login");
+        return;
       }
+
+      setUser(currentUser);
     });
+
     return () => unsubscribe();
   }, [router]);
 
   useEffect(() => {
-    if (!user || !isAdmin) return;
+    if (!user) return;
+    
     const fetchOrders = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "orders"));
@@ -56,7 +58,7 @@ const AdminDashboard = () => {
     };
 
     fetchOrders();
-  }, [user, isAdmin]);
+  }, [user]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {

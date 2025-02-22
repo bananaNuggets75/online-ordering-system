@@ -15,21 +15,25 @@ const AdminLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Attempting login with:", email, password);
+  
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Check if the logged-in user is the admin based on env variable
+      console.log("Logged in user:", user.uid);
+  
       if (user.uid === ADMIN_UID) {
-        router.push("/admin/dashboard"); // Redirect to admin dashboard
+        console.log("Admin detected. Redirecting...");
+        router.push("/admin/dashboard");
       } else {
+        console.log("Unauthorized user:", user.uid);
         setError("Unauthorized: You are not an admin.");
       }
     } catch (err) {
-        console.error("Login error:", err);
-        setError("Login failed. Please check your credentials.");
-      }      
-  };
+      console.error("Login failed:", err);
+      setError("Login failed. Please check your credentials.");
+    }
+  };  
 
   return (
     <div className="p-6 max-w-lg mx-auto bg-white rounded shadow">
