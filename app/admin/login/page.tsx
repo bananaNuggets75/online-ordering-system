@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; // Use env variable
+
 const AdminLogin = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -16,9 +18,9 @@ const AdminLogin = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      // Check if the logged-in user is the admin
-      if (user.uid === "KXbL99Ci7iguV1bNZMUqDQdFXtL2") {
+
+      // Check if the logged-in user is the admin based on env variable
+      if (user.uid === ADMIN_UID) {
         router.push("/admin/dashboard"); // Redirect to admin dashboard
       } else {
         setError("Unauthorized: You are not an admin.");
