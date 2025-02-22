@@ -26,8 +26,9 @@ const AdminLogin = () => {
         setError("Unauthorized: You are not an admin.");
       }
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
-    }
+        console.error("Login error:", err);
+        setError("Login failed. Please check your credentials.");
+      }      
   };
 
   return (
