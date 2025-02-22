@@ -4,13 +4,30 @@ import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser || currentUser.uid !== ADMIN_UID) {
+        router.push("/admin/login");
+        return;
+      }
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  useEffect(() => {
+    if (!user) return;
     const fetchOrders = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "orders"));
@@ -24,7 +41,7 @@ const AdminDashboard = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [user]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
