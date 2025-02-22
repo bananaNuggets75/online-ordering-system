@@ -4,12 +4,18 @@ import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, getIdTokenResult } from "firebase/auth";
+import { onAuthStateChanged, getIdTokenResult, User } from "firebase/auth";
+
+interface Order {
+  id: string;
+  customerName: string;
+  status: string;
+}
 
 const AdminDashboard = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
@@ -40,7 +46,7 @@ const AdminDashboard = () => {
     const fetchOrders = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "orders"));
-        const ordersData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const ordersData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Order));
         setOrders(ordersData);
       } catch (error) {
         console.error("Error fetching orders: ", error);

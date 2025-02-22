@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from "next/link";
 
 const OrderForm: React.FC = () => {
   // Local state for form inputs
@@ -80,9 +81,10 @@ const OrderForm: React.FC = () => {
       {successMessage && (
         <div style={{ marginTop: '16px', textAlign: 'center' }}>
           <p style={{ color: 'green' }}>{successMessage}</p>
-          <a href="/menu">
+          <Link href="/menu">
             <button>Go to Menu</button>
-          </a>
+            </Link>
+
         </div>
       )}
     </div>
