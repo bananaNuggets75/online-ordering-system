@@ -392,3 +392,79 @@ a {
   cursor: not-allowed;
 }
 
+/* Table container */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 30px;
+}
+
+/* Table base styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--secondary-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Table header and cells */
+th, td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  background-color: var(--hover-bg);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Alternating row colors */
+tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Links inside table */
+td a {
+  color: #9abaff;
+  text-decoration: none;
+  transition: text-decoration 0.3s ease;
+  font-size: 1rem;
+}
+
+td a:hover {
+  text-decoration: underline;
+}
+
+/* Dropdown styling */
+select {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--secondary-bg);
+  color: var(--primary-text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Apply hover effect to the select dropdown */
+select:hover {
+  background: var(--hover-bg);
+}
+
+/* Status Colors */
+.status-pending {
+  color: #facc15; 
+}
+
+.status-in-process {
+  color: #f10c0c; 
+}
+
+.status-completed {
+  color: #22c55e; 
+}
+

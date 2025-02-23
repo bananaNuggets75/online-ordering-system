@@ -6,12 +6,13 @@ import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
-const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; // Ensure this is set
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 interface Order {
   id: string;
   customerName: string;
   status: string;
+  updatedAt?: string; 
 }
 
 const AdminDashboard = () => {
@@ -22,20 +23,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log("Auth state changed:", currentUser?.uid);
-      
-      if (!currentUser) {
-        console.log("No user logged in. Redirecting to login...");
+      if (!currentUser || currentUser.uid !== ADMIN_UID) {
         router.push("/admin/login");
         return;
       }
-
-      if (currentUser.uid !== ADMIN_UID) {
-        console.log("Unauthorized user:", currentUser.uid);
-        router.push("/admin/login");
-        return;
-      }
-
       setUser(currentUser);
     });
 
@@ -44,11 +35,22 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchOrders = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "orders"));
-        const ordersData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Order));
+        const ordersData = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            customerName: data.name || "Unknown",
+            status: data.status,
+            updatedAt: data.updatedAt
+              ? new Date(data.updatedAt.seconds * 1000).toLocaleString()
+              : "N/A",
+          };
+        });
+
         setOrders(ordersData);
       } catch (error) {
         console.error("Error fetching orders: ", error);
@@ -63,9 +65,14 @@ const AdminDashboard = () => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { status: newStatus });
+      await updateDoc(orderRef, { status: newStatus, updatedAt: new Date() });
+
       setOrders((prevOrders) =>
-        prevOrders.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order))
+        prevOrders.map((order) =>
+          order.id === orderId
+            ? { ...order, status: newStatus, updatedAt: new Date().toLocaleString() }
+            : order
+        )
       );
     } catch (error) {
       console.error("Error updating order status: ", error);
@@ -78,36 +85,41 @@ const AdminDashboard = () => {
       {loading ? (
         <p>Loading orders...</p>
       ) : (
-        <table className="w-full border-collapse border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Order ID</th>
-              <th className="border p-2">Customer</th>
-              <th className="border p-2">Status</th>
-              <th className="border p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border">
-                <td className="border p-2">{order.id}</td>
-                <td className="border p-2">{order.customerName}</td>
-                <td className="border p-2">{order.status}</td>
-                <td className="border p-2">
-                  <select
-                    value={order.status}
-                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                    className="border p-1 rounded"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="In-Process">In-Process</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                </td>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.id}>
+                  <td>{order.id}</td>
+                  <td>{order.customerName}</td>
+                  <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
+                    {order.status}
+                  </td>
+                  <td>{order.updatedAt}</td>
+                  <td>
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="In-Process">In-Process</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
