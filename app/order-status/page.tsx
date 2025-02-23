@@ -1,13 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { db } from "@/lib/firebase";
+import { collection, query, onSnapshot } from "firebase/firestore";
 
 interface Order {
   id: string;
   name: string;
   contact: string;
-  deliveryType: 'Pickup' | 'Delivery';
-  status: 'Pending' | 'In-Process' | 'Ready for Pickup' | 'Out for Delivery';
+  deliveryType: "Pickup" | "Delivery";
+  status: "Pending" | "In-Process" | "Ready for Pickup" | "Out for Delivery" | "Completed";
 }
 
 const OrderStatusPage = () => {
@@ -15,13 +17,22 @@ const OrderStatusPage = () => {
   const [userOrderId, setUserOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch orders from localStorage (or ideally, from a database via an API call)
-    const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(storedOrders);
-    
     // Retrieve the user's order ID from sessionStorage
-    const storedUserOrderId = sessionStorage.getItem('userOrderId');
+    const storedUserOrderId = sessionStorage.getItem("userOrderId");
     setUserOrderId(storedUserOrderId);
+
+    // Firestore real-time listener for order updates
+    const q = query(collection(db, "orders"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ordersData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Order[];
+      setOrders(ordersData);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
 
   return (
@@ -33,7 +44,7 @@ const OrderStatusPage = () => {
             <div
               key={order.id}
               className={`p-4 border rounded-lg shadow-sm ${
-                order.id === userOrderId ? 'bg-yellow-100 border-yellow-500' : 'bg-white'
+                order.id === userOrderId ? "bg-yellow-100 border-yellow-500" : "bg-white"
               }`}
             >
               <p className="font-bold">Order #{order.id}</p>

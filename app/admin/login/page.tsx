@@ -1,39 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
-const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; // Use env variable
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; // Ensure it's set in .env.local
 
 const AdminLogin = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Prevent multiple clicks
+
+  useEffect(() => {
+    if (!ADMIN_UID) {
+      console.error("NEXT_PUBLIC_ADMIN_UID is not set in .env.local");
+      setError("Internal error: Admin verification is unavailable.");
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Attempting login with:", email, password);
-  
+    setLoading(true);
+    setError("");
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("Logged in user:", user.uid);
-  
+
       if (user.uid === ADMIN_UID) {
-        console.log("Admin detected. Redirecting...");
         router.push("/admin/dashboard");
       } else {
-        console.log("Unauthorized user:", user.uid);
         setError("Unauthorized: You are not an admin.");
       }
     } catch (err) {
       console.error("Login failed:", err);
       setError("Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
-  };  
+  };
 
   return (
     <div className="p-6 max-w-lg mx-auto bg-white rounded shadow">
@@ -48,6 +56,7 @@ const AdminLogin = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full p-2 border rounded"
+            disabled={loading}
           />
         </div>
         <div>
@@ -58,13 +67,15 @@ const AdminLogin = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full p-2 border rounded"
+            disabled={loading}
           />
         </div>
         <button 
           type="submit"
-          className="w-full p-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600"
+          className={`w-full p-3 bg-blue-500 text-white font-bold rounded ${loading ? "opacity-50" : "hover:bg-blue-600"}`}
+          disabled={loading}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
