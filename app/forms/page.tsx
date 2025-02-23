@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
 
 const OrderForm = () => {
   const router = useRouter();
@@ -18,21 +19,24 @@ const OrderForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+  
     // Generate order ID
     const orderId = Date.now().toString();
     const newOrder = { id: orderId, ...formData, status: 'Pending' };
-    
-    // Save order to localStorage
-    const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    localStorage.setItem('orders', JSON.stringify([...storedOrders, newOrder]));
-    
-    // Save user order ID for highlighting
-    sessionStorage.setItem('userOrderId', orderId);
-    
+  
+    if (typeof window !== 'undefined') {
+      // Save order to localStorage
+      const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+      localStorage.setItem('orders', JSON.stringify([...storedOrders, newOrder]));
+  
+      // Save user order ID for highlighting
+      sessionStorage.setItem('userOrderId', orderId);
+    }
+  
     // Redirect to menu page
     router.push('/menu');
   };
+  
 
   return (
     <div className="p-6 max-w-lg mx-auto bg-white rounded shadow">
