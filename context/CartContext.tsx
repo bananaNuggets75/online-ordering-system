@@ -1,4 +1,4 @@
-"use client"; // Ensure this is at the top
+"use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -22,16 +22,24 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedCart = localStorage.getItem("cart");
-      return savedCart ? JSON.parse(savedCart) : [];
-    }
-    return [];
-  });
-
+  const [cart, setCart] = useState<CartItem[]>([]); // Initially empty to avoid hydration mismatch
+  const [mounted, setMounted] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState<CartItem | null>(null);
   const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
+
+  useEffect(() => {
+    setMounted(true); // Mark component as mounted
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+  }, [cart, mounted]);
 
   useEffect(() => {
     if (lastAddedItem) {
@@ -61,10 +69,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [lastRemovedItem]);
 
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
   const addToCart = (item: CartItem) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
@@ -77,15 +81,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       }
       return [...prevCart, item];
     });
-    setLastAddedItem(item); // Set the last added item for the notification
+    setLastAddedItem(item);
   };
 
   const removeFromCart = (id: number) => {
     setCart((prevCart) => {
       const itemToRemove = prevCart.find((item) => item.id === id);
-      if (!itemToRemove) return prevCart; // Prevent errors
-
-      setLastRemovedItem(itemToRemove); // Set the last removed item for the notification
+      if (!itemToRemove) return prevCart;
+      setLastRemovedItem(itemToRemove);
       return prevCart.filter((item) => item.id !== id);
     });
   };
@@ -102,6 +105,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       },
     });
   };
+
+  if (!mounted) return null; // Prevent hydration mismatch by ensuring it only renders after mounting
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
