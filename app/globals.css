@@ -467,4 +467,95 @@ select:hover {
 .status-completed {
   color: #22c55e; 
 }
+.status-out-for-delivery {
+  background-color: #6f42c1;
+  color: white;
+}
+
+.status-completed {
+  background-color: #28a745;
+  color: white;
+}
+
+
+
+/*order status*/
+
+/* Full page container */
+.order-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.order-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Grid layout for order cards */
+.order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Order card styling */
+.order-card {
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: #808080;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  margin-bottom: 20px; 
+}
+
+.order-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 5px;
+  text-transform: uppercase;
+}
+
+/* Order information */
+.order-id {
+  font-size: 18px;
+  font-weight: bold;
+  color: #121212;
+}
+
+.order-info {
+  font-size: 14px;
+  color: #bbb;
+  margin-top: 4px;
+}
+
+/* Status badge styling */
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-weight: bold;
+  text-align: center;
+  min-width: 140px;
+  margin-top: 12px;
+}
 

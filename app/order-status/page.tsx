@@ -15,8 +15,11 @@ interface Order {
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [userOrderId, setUserOrderId] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false); // Fix for hydration issue
 
   useEffect(() => {
+    setIsClient(true); // Ensures this runs only on the client
+
     // Retrieve the user's order ID from sessionStorage
     const storedUserOrderId = sessionStorage.getItem("userOrderId");
     setUserOrderId(storedUserOrderId);
@@ -35,30 +38,37 @@ const OrderStatusPage = () => {
     return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
 
+  // Prevent rendering on the server to avoid hydration mismatch
+  if (!isClient) {
+    return null;
+  }
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Order Status</h1>
-      <div className="space-y-4">
+    <div className="order-container">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Order Status</h1>
+  
+      <div className="order-list">
         {orders.length > 0 ? (
-          orders.map((order) => (
-            <div
-              key={order.id}
-              className={`p-4 border rounded-lg shadow-sm ${
-                order.id === userOrderId ? "bg-yellow-100 border-yellow-500" : "bg-white"
-              }`}
-            >
-              <p className="font-bold">Order #{order.id}</p>
-              <p>Name: {order.name}</p>
-              <p>Contact: {order.contact}</p>
-              <p>Type: {order.deliveryType}</p>
-              <p className="font-semibold">Status: {order.status}</p>
-            </div>
-          ))
+          orders
+            .filter((order) => !userOrderId || order.id === userOrderId) // Filter for user's order
+            .map((order) => (
+              <div key={order.id} className="order-card">
+                <div className="order-header">
+                  <span className="order-id font-semibold">Order #{order.id}</span>
+                  <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                    {order.status}
+                  </span>
+                </div>
+                <p className="order-info">Name: {order.name || "N/A"}</p>
+                <p className="order-info">Contact: {order.contact || "N/A"}</p>
+                <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
+              </div>
+            ))
         ) : (
-          <p>No orders found.</p>
+          <p className="text-center text-gray-600 text-lg">No orders found.</p>
         )}
       </div>
-    </div>
+    </div>  
   );
 };
 
