@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -12,7 +12,7 @@ interface Order {
   id: string;
   customerName: string;
   status: string;
-  updatedAt?: string; 
+  updatedAt?: string;
 }
 
 const AdminDashboard = () => {
@@ -65,7 +65,10 @@ const AdminDashboard = () => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { status: newStatus, updatedAt: new Date() });
+      await updateDoc(orderRef, { 
+        status: newStatus, 
+        updatedAt: serverTimestamp() 
+      });
 
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
