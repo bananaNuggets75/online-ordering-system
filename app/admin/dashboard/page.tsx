@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, updateDoc, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -21,15 +21,17 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false); // Track auth state check
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser || currentUser.uid !== ADMIN_UID) {
         router.push("/admin/login");
-        return;
+      } else {
+        setUser(currentUser);
       }
-      setUser(currentUser);
+      setAuthChecked(true); // Mark auth check as complete
     });
 
     return () => unsubscribe();
@@ -46,10 +48,10 @@ const AdminDashboard = () => {
           return {
             id: doc.id,
             ...data,
-            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toLocaleString() : "N/A",
+            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A", // Use ISO format
           };
         }) as Order[];
-    
+
         setOrders(firestoreOrders);
       } catch (error) {
         console.error("Error fetching orders: ", error);
@@ -57,23 +59,21 @@ const AdminDashboard = () => {
         setLoading(false);
       }
     };
-    
 
     fetchOrders();
   }, [user]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      // Update in Firestore
       const orderRef = doc(db, "orders", orderId);
       await updateDoc(orderRef, { 
         status: newStatus, 
-        updatedAt: serverTimestamp() 
+        updatedAt: serverTimestamp(),
       });
 
-      // Update in localStorage
+      // Update state without causing mismatch
       const updatedOrders = orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toLocaleString() } : order
+        order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
       );
 
       setOrders(updatedOrders);
@@ -82,6 +82,9 @@ const AdminDashboard = () => {
       console.error("Error updating order status: ", error);
     }
   };
+
+  // **Fix: Don't render anything until auth check is done**
+  if (!authChecked) return <div className="p-6">Checking authentication...</div>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto bg-white rounded shadow">
@@ -112,7 +115,7 @@ const AdminDashboard = () => {
                   <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
                     {order.status}
                   </td>
-                  <td>{order.updatedAt || "N/A"}</td>
+                  <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
                   <td>
                     <select
                       value={order.status}
