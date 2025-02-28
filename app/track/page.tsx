@@ -4,9 +4,18 @@ import { useState } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
+interface Order {
+  id: string;
+  customerName: string;
+  contact: string;
+  deliveryType: string;
+  status: string;
+  updatedAt?: string;
+}
+
 const TrackOrder = () => {
   const [orderId, setOrderId] = useState('');
-  const [orderData, setOrderData] = useState<any>(null);
+  const [orderData, setOrderData] = useState<Order | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +34,7 @@ const TrackOrder = () => {
       const orderSnap = await getDoc(orderRef);
 
       if (orderSnap.exists()) {
-        setOrderData(orderSnap.data());
+        setOrderData(orderSnap.data() as Order);
       } else {
         setError('Order not found. Please check your Order ID.');
       }

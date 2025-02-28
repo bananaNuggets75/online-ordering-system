@@ -12,7 +12,6 @@ interface Order {
   status: "Pending" | "In-Process" | "Ready for Pickup" | "Out for Delivery" | "Completed";
 }
 
-
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [userOrderId, setUserOrderId] = useState<string | null>(null);
@@ -42,21 +41,21 @@ const OrderStatusPage = () => {
   
       <div className="order-list">
         {orders.length > 0 ? (
-          orders.map((order) => (
-            <div key={order.id} className="order-card">
-              <div className="order-header">
-                <span className="order-id font-semibold">Order #{order.id}</span>
-                <span className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
-                  {order.status}
+          orders
+            .filter((order) => !userOrderId || order.id === userOrderId) // Filter for user's order
+            .map((order) => (
+              <div key={order.id} className="order-card">
+                <div className="order-header">
+                  <span className="order-id font-semibold">Order #{order.id}</span>
+                  <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                    {order.status}
                   </span>
-
-
+                </div>
+                <p className="order-info">Name: {order.name || "N/A"}</p>
+                <p className="order-info">Contact: {order.contact || "N/A"}</p>
+                <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
               </div>
-              <p className="order-info">Name: {order.name || "N/A"}</p>
-              <p className="order-info">Contact: {order.contact || "N/A"}</p>
-              <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
-            </div>
-          ))
+            ))
         ) : (
           <p className="text-center text-gray-600 text-lg">No orders found.</p>
         )}
