@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
+import { db } from "@/lib/firebase";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const OrderForm = () => {
   const router = useRouter();
@@ -17,36 +18,39 @@ const OrderForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
-    // Generate order ID
+    // Generate unique order ID
     const orderId = Date.now().toString();
   
-    // Rename 'name' to 'customerName' to match the AdminDashboard
+    // New order object
     const newOrder = { 
       id: orderId, 
-      customerName: formData.name,  // ✅ Correct key name
+      customerName: formData.name,
       contact: formData.contact, 
       deliveryType: formData.deliveryType, 
       status: 'Pending', 
-      updatedAt: Date.now()  // Optional timestamp
+      updatedAt: serverTimestamp()
     };
   
-    if (typeof window !== 'undefined') {
+    try {
+      // Save order to Firestore
+      await setDoc(doc(db, "orders", orderId), newOrder);
+  
       // Save order to localStorage
       const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
       localStorage.setItem('orders', JSON.stringify([...storedOrders, newOrder]));
   
-      // Save user order ID for highlighting
+      // Store order ID in sessionStorage for tracking
       sessionStorage.setItem('userOrderId', orderId);
+  
+      // Redirect to menu page
+      router.push('/menu');
+    } catch (error) {
+      console.error("Error placing order:", error);
     }
-  
-    // Redirect to menu page
-    router.push('/menu');
   };
-  
-  
 
   return (
     <div className="p-6 max-w-lg mx-auto bg-white rounded shadow">
