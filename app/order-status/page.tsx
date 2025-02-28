@@ -12,6 +12,7 @@ interface Order {
   status: "Pending" | "In-Process" | "Ready for Pickup" | "Out for Delivery" | "Completed";
 }
 
+
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [userOrderId, setUserOrderId] = useState<string | null>(null);
@@ -36,29 +37,31 @@ const OrderStatusPage = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Order Status</h1>
-      <div className="space-y-4">
+    <div className="order-container">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Order Status</h1>
+  
+      <div className="order-list">
         {orders.length > 0 ? (
           orders.map((order) => (
-            <div
-              key={order.id}
-              className={`p-4 border rounded-lg shadow-sm ${
-                order.id === userOrderId ? "bg-yellow-100 border-yellow-500" : "bg-white"
-              }`}
-            >
-              <p className="font-bold">Order #{order.id}</p>
-              <p>Name: {order.name}</p>
-              <p>Contact: {order.contact}</p>
-              <p>Type: {order.deliveryType}</p>
-              <p className="font-semibold">Status: {order.status}</p>
+            <div key={order.id} className="order-card">
+              <div className="order-header">
+                <span className="order-id font-semibold">Order #{order.id}</span>
+                <span className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
+                  {order.status}
+                  </span>
+
+
+              </div>
+              <p className="order-info">Name: {order.name || "N/A"}</p>
+              <p className="order-info">Contact: {order.contact || "N/A"}</p>
+              <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
             </div>
           ))
         ) : (
-          <p>No orders found.</p>
+          <p className="text-center text-gray-600 text-lg">No orders found.</p>
         )}
       </div>
-    </div>
+    </div>  
   );
 };
 
