@@ -15,8 +15,11 @@ interface Order {
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [userOrderId, setUserOrderId] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false); // Fix for hydration issue
 
   useEffect(() => {
+    setIsClient(true); // Ensures this runs only on the client
+
     // Retrieve the user's order ID from sessionStorage
     const storedUserOrderId = sessionStorage.getItem("userOrderId");
     setUserOrderId(storedUserOrderId);
@@ -34,6 +37,11 @@ const OrderStatusPage = () => {
 
     return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
+
+  // Prevent rendering on the server to avoid hydration mismatch
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div className="order-container">
