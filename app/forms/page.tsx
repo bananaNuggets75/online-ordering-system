@@ -22,7 +22,16 @@ const OrderForm = () => {
   
     // Generate order ID
     const orderId = Date.now().toString();
-    const newOrder = { id: orderId, ...formData, status: 'Pending' };
+  
+    // Rename 'name' to 'customerName' to match the AdminDashboard
+    const newOrder = { 
+      id: orderId, 
+      customerName: formData.name,  // ✅ Correct key name
+      contact: formData.contact, 
+      deliveryType: formData.deliveryType, 
+      status: 'Pending', 
+      updatedAt: Date.now()  // Optional timestamp
+    };
   
     if (typeof window !== 'undefined') {
       // Save order to localStorage
@@ -36,6 +45,7 @@ const OrderForm = () => {
     // Redirect to menu page
     router.push('/menu');
   };
+  
   
 
   return (
