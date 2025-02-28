@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
-const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; // Ensure it's set in .env.local
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; 
 
 const AdminLogin = () => {
   const router = useRouter();

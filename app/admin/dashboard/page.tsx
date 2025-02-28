@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -11,23 +11,27 @@ const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 interface Order {
   id: string;
   customerName: string;
+  contact: string;
+  deliveryType: string;
   status: string;
-  updatedAt?: string; 
+  updatedAt?: string;
 }
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false); // Track auth state check
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser || currentUser.uid !== ADMIN_UID) {
         router.push("/admin/login");
-        return;
+      } else {
+        setUser(currentUser);
       }
-      setUser(currentUser);
+      setAuthChecked(true); // Mark auth check as complete
     });
 
     return () => unsubscribe();
@@ -39,19 +43,16 @@ const AdminDashboard = () => {
     const fetchOrders = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "orders"));
-        const ordersData = querySnapshot.docs.map((doc) => {
+        const firestoreOrders = querySnapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             id: doc.id,
-            customerName: data.name || "Unknown",
-            status: data.status,
-            updatedAt: data.updatedAt
-              ? new Date(data.updatedAt.seconds * 1000).toLocaleString()
-              : "N/A",
+            ...data,
+            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A", // Use ISO format
           };
-        });
+        }) as Order[];
 
-        setOrders(ordersData);
+        setOrders(firestoreOrders);
       } catch (error) {
         console.error("Error fetching orders: ", error);
       } finally {
@@ -65,19 +66,25 @@ const AdminDashboard = () => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { status: newStatus, updatedAt: new Date() });
+      await updateDoc(orderRef, { 
+        status: newStatus, 
+        updatedAt: serverTimestamp(),
+      });
 
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === orderId
-            ? { ...order, status: newStatus, updatedAt: new Date().toLocaleString() }
-            : order
-        )
+      // Update state without causing mismatch
+      const updatedOrders = orders.map((order) =>
+        order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
       );
+
+      setOrders(updatedOrders);
+      localStorage.setItem("orders", JSON.stringify(updatedOrders));
     } catch (error) {
       console.error("Error updating order status: ", error);
     }
   };
+
+  // **Fix: Don't render anything until auth check is done**
+  if (!authChecked) return <div className="p-6">Checking authentication...</div>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto bg-white rounded shadow">
@@ -91,6 +98,8 @@ const AdminDashboard = () => {
               <tr>
                 <th>Order ID</th>
                 <th>Customer</th>
+                <th>Contact</th>
+                <th>Delivery Type</th>
                 <th>Status</th>
                 <th>Last Updated</th>
                 <th>Action</th>
@@ -101,10 +110,12 @@ const AdminDashboard = () => {
                 <tr key={order.id}>
                   <td>{order.id}</td>
                   <td>{order.customerName}</td>
+                  <td>{order.contact}</td>
+                  <td>{order.deliveryType}</td>
                   <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
                     {order.status}
                   </td>
-                  <td>{order.updatedAt}</td>
+                  <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
                   <td>
                     <select
                       value={order.status}
