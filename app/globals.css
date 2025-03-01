@@ -559,3 +559,34 @@ select:hover {
   margin-top: 12px;
 }
 
+
+.archive-btn {
+  background-color: #4a55a2; /* Similar dark blue/purple */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  cursor: pointer; /* Indicate it's clickable */
+  font-family: sans-serif; /* Clean font */
+  font-size: 16px;
+  display: inline-flex; /* To align icon and text */
+  align-items: center; /* Vertical centering */
+  margin: 0 auto;
+}
+
+/* Icon styling (using Font Awesome as an example) */
+.archive-btn::before {
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  content: '\f187'; /* Archive box icon code */
+  margin-right: 8px; /* Space between icon and text */
+  font-size: 40px;
+}
+
+.flex.justify-center.mt-6.p-6 { /* This is the div surrounding your button */
+  display: flex;
+  justify-content: center;
+  margin-top: 24px; /* Adjust as needed for top padding */
+  padding: 24px;   /* Adjust as needed for top and bottom padding */
+}

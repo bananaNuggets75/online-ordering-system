@@ -149,8 +149,10 @@ const AdminDashboard = () => {
                   <td>{order.customerName}</td>
                   <td>{order.contact}</td>
                   <td>{order.deliveryType}</td>
-                  <td>{order.status}</td>
-                  <td>{order.updatedAt ? new Date(order.updatedAt).toLocaleString() : "N/A"}</td>
+                  <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
+                    {order.status}
+                  </td>
+                  <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
                   <td>
                     <select
                       value={order.status}
@@ -166,17 +168,23 @@ const AdminDashboard = () => {
             </tbody>
           </table>
           {selectedOrders.length > 0 && (
-            <button
-              onClick={archiveSelectedOrders}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Move to Archive ({selectedOrders.length} selected)
-            </button>
+            <div className="flex justify-center mt-6 p-6">
+              <button
+                onClick={archiveSelectedOrders}
+                className="archive-btn"
+              >
+                Move to Archive ({selectedOrders.length} selected)
+              </button>
+            </div>
           )}
         </div>
       )}
+      <div className="py-6 text-center text-gray-500 text-sm">
+        &copy; {new Date().getFullYear()} Admin Dashboard. All rights reserved.
+      </div>
     </div>
   );
 };
 
 export default AdminDashboard;
+
