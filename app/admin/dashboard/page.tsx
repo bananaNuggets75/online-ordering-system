@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -21,7 +21,9 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [authChecked, setAuthChecked] = useState(false); // Track auth state check
+  const [authChecked, setAuthChecked] = useState(false);
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +33,7 @@ const AdminDashboard = () => {
       } else {
         setUser(currentUser);
       }
-      setAuthChecked(true); // Mark auth check as complete
+      setAuthChecked(true);
     });
 
     return () => unsubscribe();
@@ -48,7 +50,7 @@ const AdminDashboard = () => {
           return {
             id: doc.id,
             ...data,
-            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A", // Use ISO format
+            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
           };
         }) as Order[];
 
@@ -71,7 +73,6 @@ const AdminDashboard = () => {
         updatedAt: serverTimestamp(),
       });
 
-      // Update state without causing mismatch
       const updatedOrders = orders.map((order) =>
         order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
       );
@@ -83,7 +84,35 @@ const AdminDashboard = () => {
     }
   };
 
-  // **Fix: Don't render anything until auth check is done**
+  const handleCheckboxChange = (orderId: string) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const archiveSelectedOrders = async () => {
+    try {
+      for (const orderId of selectedOrders) {
+        const order = orders.find((o) => o.id === orderId);
+        if (!order) continue;
+
+        const archiveRef = doc(db, "archived_orders", orderId);
+        await setDoc(archiveRef, {
+          ...order,
+          archivedAt: serverTimestamp(),
+        });
+
+        const orderRef = doc(db, "orders", orderId);
+        await deleteDoc(orderRef);
+      }
+
+      setOrders((prevOrders) => prevOrders.filter((order) => !selectedOrders.includes(order.id)));
+      setSelectedOrders([]);
+    } catch (error) {
+      console.error("Error archiving orders: ", error);
+    }
+  };
+
   if (!authChecked) return <div className="p-6">Checking authentication...</div>;
 
   return (
@@ -96,6 +125,7 @@ const AdminDashboard = () => {
           <table>
             <thead>
               <tr>
+                <th>Select</th>
                 <th>Order ID</th>
                 <th>Customer</th>
                 <th>Contact</th>
@@ -108,14 +138,19 @@ const AdminDashboard = () => {
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => handleCheckboxChange(order.id)}
+                    />
+                  </td>
                   <td>{order.id}</td>
                   <td>{order.customerName}</td>
                   <td>{order.contact}</td>
                   <td>{order.deliveryType}</td>
-                  <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
-                    {order.status}
-                  </td>
-                  <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
+                  <td>{order.status}</td>
+                  <td>{order.updatedAt ? new Date(order.updatedAt).toLocaleString() : "N/A"}</td>
                   <td>
                     <select
                       value={order.status}
@@ -130,6 +165,14 @@ const AdminDashboard = () => {
               ))}
             </tbody>
           </table>
+          {selectedOrders.length > 0 && (
+            <button
+              onClick={archiveSelectedOrders}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Move to Archive ({selectedOrders.length} selected)
+            </button>
+          )}
         </div>
       )}
     </div>
