@@ -1,6 +1,7 @@
 import Sidebar from "@/components/SideBar";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast"; 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -9,7 +10,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <CartProvider>
           <Sidebar />
+          
           {children}
+          
           <Toaster 
           position="top-center"
           toastOptions={{
