@@ -13,6 +13,7 @@ interface Order {
   customerName: string;
   contact: string;
   deliveryType: string;
+  deliveryLocation?: string;
   status: string;
   updatedAt?: string;
 }
@@ -49,10 +50,15 @@ const AdminDashboard = () => {
           const data = doc.data();
           return {
             id: doc.id,
-            ...data,
+            customerName: data.customerName || "N/A",
+            contact: data.contact || "N/A",
+            deliveryType: data.deliveryType || "N/A",
+            deliveryLocation: data.deliveryLocation || "N/A", // Ensure deliveryLocation is fetched
+            status: data.status || "Pending",
             updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
           };
         }) as Order[];
+        
 
         setOrders(firestoreOrders);
       } catch (error) {
@@ -130,6 +136,7 @@ const AdminDashboard = () => {
                 <th>Customer</th>
                 <th>Contact</th>
                 <th>Delivery Type</th>
+                <th>Delivery Location</th>
                 <th>Status</th>
                 <th>Last Updated</th>
                 <th>Action</th>
@@ -149,6 +156,7 @@ const AdminDashboard = () => {
                   <td>{order.customerName}</td>
                   <td>{order.contact}</td>
                   <td>{order.deliveryType}</td>
+                  <td>{order.deliveryLocation || "N/A"}</td>
                   <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
                     {order.status}
                   </td>
@@ -187,4 +195,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

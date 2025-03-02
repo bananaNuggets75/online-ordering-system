@@ -31,10 +31,12 @@ const OrderForm = () => {
       customerName: formData.name,
       contact: formData.contact, 
       deliveryType: formData.deliveryType, 
-      location: formData.deliveryType === 'Delivery' ? formData.location : '', // Store only if Delivery
+      deliveryLocation: formData.deliveryType === 'Delivery' ? formData.location : '', // Store only if Delivery
       status: 'Pending', 
       updatedAt: serverTimestamp()
     };
+
+    console.log("Order Data:", newOrder);
   
     try {
       // Save order to Firestore
