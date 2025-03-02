@@ -11,6 +11,7 @@ const OrderForm = () => {
     name: '',
     contact: '',
     deliveryType: 'Pickup',
+    location: '' // Added location field
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -30,9 +31,12 @@ const OrderForm = () => {
       customerName: formData.name,
       contact: formData.contact, 
       deliveryType: formData.deliveryType, 
+      deliveryLocation: formData.deliveryType === 'Delivery' ? formData.location : '', // Store only if Delivery
       status: 'Pending', 
       updatedAt: serverTimestamp()
     };
+
+    console.log("Order Data:", newOrder);
   
     try {
       // Save order to Firestore
@@ -71,6 +75,23 @@ const OrderForm = () => {
             <option value="Delivery">Delivery (Only within CPU)</option>
           </select>
         </div>
+        
+        {/* Show location field only if Delivery is selected */}
+        {formData.deliveryType === 'Delivery' && (
+          <div>
+            <label className="block font-semibold">Delivery Location:</label>
+            <input 
+              type="text" 
+              name="location" 
+              value={formData.location} 
+              onChange={handleChange} 
+              required={formData.deliveryType === 'Delivery'} 
+              className="w-full p-2 border rounded" 
+              placeholder="Enter delivery location" 
+            />
+          </div>
+        )}
+
         <button type="submit" className="w-full p-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600">Submit</button>
       </form>
     </div>

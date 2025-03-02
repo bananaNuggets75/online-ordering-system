@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -13,6 +13,7 @@ interface Order {
   customerName: string;
   contact: string;
   deliveryType: string;
+  deliveryLocation?: string;
   status: string;
   updatedAt?: string;
 }
@@ -21,7 +22,9 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [authChecked, setAuthChecked] = useState(false); // Track auth state check
+  const [authChecked, setAuthChecked] = useState(false);
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +34,7 @@ const AdminDashboard = () => {
       } else {
         setUser(currentUser);
       }
-      setAuthChecked(true); // Mark auth check as complete
+      setAuthChecked(true);
     });
 
     return () => unsubscribe();
@@ -47,10 +50,15 @@ const AdminDashboard = () => {
           const data = doc.data();
           return {
             id: doc.id,
-            ...data,
-            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A", // Use ISO format
+            customerName: data.customerName || "N/A",
+            contact: data.contact || "N/A",
+            deliveryType: data.deliveryType || "N/A",
+            deliveryLocation: data.deliveryLocation || "N/A", // Ensure deliveryLocation is fetched
+            status: data.status || "Pending",
+            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
           };
         }) as Order[];
+        
 
         setOrders(firestoreOrders);
       } catch (error) {
@@ -71,7 +79,6 @@ const AdminDashboard = () => {
         updatedAt: serverTimestamp(),
       });
 
-      // Update state without causing mismatch
       const updatedOrders = orders.map((order) =>
         order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
       );
@@ -83,7 +90,35 @@ const AdminDashboard = () => {
     }
   };
 
-  // **Fix: Don't render anything until auth check is done**
+  const handleCheckboxChange = (orderId: string) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const archiveSelectedOrders = async () => {
+    try {
+      for (const orderId of selectedOrders) {
+        const order = orders.find((o) => o.id === orderId);
+        if (!order) continue;
+
+        const archiveRef = doc(db, "archived_orders", orderId);
+        await setDoc(archiveRef, {
+          ...order,
+          archivedAt: serverTimestamp(),
+        });
+
+        const orderRef = doc(db, "orders", orderId);
+        await deleteDoc(orderRef);
+      }
+
+      setOrders((prevOrders) => prevOrders.filter((order) => !selectedOrders.includes(order.id)));
+      setSelectedOrders([]);
+    } catch (error) {
+      console.error("Error archiving orders: ", error);
+    }
+  };
+
   if (!authChecked) return <div className="p-6">Checking authentication...</div>;
 
   return (
@@ -96,10 +131,12 @@ const AdminDashboard = () => {
           <table>
             <thead>
               <tr>
+                <th>Select</th>
                 <th>Order ID</th>
                 <th>Customer</th>
                 <th>Contact</th>
                 <th>Delivery Type</th>
+                <th>Delivery Location</th>
                 <th>Status</th>
                 <th>Last Updated</th>
                 <th>Action</th>
@@ -108,10 +145,18 @@ const AdminDashboard = () => {
             <tbody>
               {orders.map((order) => (
                 <tr key={order.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => handleCheckboxChange(order.id)}
+                    />
+                  </td>
                   <td>{order.id}</td>
                   <td>{order.customerName}</td>
                   <td>{order.contact}</td>
                   <td>{order.deliveryType}</td>
+                  <td>{order.deliveryLocation || "N/A"}</td>
                   <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
                     {order.status}
                   </td>
@@ -130,8 +175,21 @@ const AdminDashboard = () => {
               ))}
             </tbody>
           </table>
+          {selectedOrders.length > 0 && (
+            <div className="flex justify-center mt-6 p-6">
+              <button
+                onClick={archiveSelectedOrders}
+                className="archive-btn"
+              >
+                Move to Archive ({selectedOrders.length} selected)
+              </button>
+            </div>
+          )}
         </div>
       )}
+      <div className="py-6 text-center text-gray-500 text-sm">
+        &copy; {new Date().getFullYear()} Admin Dashboard. All rights reserved.
+      </div>
     </div>
   );
 };

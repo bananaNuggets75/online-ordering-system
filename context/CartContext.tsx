@@ -106,7 +106,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
-  if (!mounted) return null; // Prevent hydration mismatch by ensuring it only renders after mounting
+  if (!mounted) return null;
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
