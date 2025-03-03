@@ -122,8 +122,8 @@ const AdminDashboard = () => {
   if (!authChecked) return <div className="p-6">Checking authentication...</div>;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto bg-white rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+    <div className="admin-dashboard-container">
+      <h1 className="admin-title">Admin Dashboard</h1>
       {loading ? (
         <p>Loading orders...</p>
       ) : (
@@ -177,21 +177,18 @@ const AdminDashboard = () => {
           </table>
           {selectedOrders.length > 0 && (
             <div className="flex justify-center mt-6 p-6">
-              <button
-                onClick={archiveSelectedOrders}
-                className="archive-btn"
-              >
+              <button onClick={archiveSelectedOrders} className="archive-btn">
                 Move to Archive ({selectedOrders.length} selected)
               </button>
             </div>
           )}
         </div>
       )}
-      <div className="py-6 text-center text-gray-500 text-sm">
+      <div className="footer">
         &copy; {new Date().getFullYear()} Admin Dashboard. All rights reserved.
       </div>
     </div>
-  );
+  );  
 };
 
 export default AdminDashboard;
