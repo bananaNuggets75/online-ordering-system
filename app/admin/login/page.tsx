@@ -44,35 +44,35 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="p-6 max-w-lg mx-auto bg-white rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="block font-semibold">Email:</label>
+    <div className="admin-login-container">
+      <h1 className="admin-login-title">Admin Login</h1>
+      {error && <p className="error-message">{error}</p>}
+      <form onSubmit={handleLogin} className="login-form">
+        <div className="form-group">
+          <label className="form-label">Email:</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full p-2 border rounded"
+            className="form-input"
             disabled={loading}
           />
         </div>
-        <div>
-          <label className="block font-semibold">Password:</label>
+        <div className="form-group">
+          <label className="form-label">Password:</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full p-2 border rounded"
+            className="form-input"
             disabled={loading}
           />
         </div>
         <button 
           type="submit"
-          className={`w-full p-3 bg-blue-500 text-white font-bold rounded ${loading ? "opacity-50" : "hover:bg-blue-600"}`}
+          className={`login-button ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}
@@ -80,6 +80,6 @@ const AdminLogin = () => {
       </form>
     </div>
   );
-};
+}
 
-export default AdminLogin;
+export default AdminLogin

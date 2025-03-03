@@ -667,3 +667,69 @@ select:hover {
 .clear-cart-btn:hover, .checkout-btn:hover {
   background-color: #cc5200; /* Darker Orange for Hover */
 }
+
+.admin-login-container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #808080;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.admin-login-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.error-message {
+  color: #e63946;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #e65c00; /* Orange theme */
+  color: white;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.login-button:hover {
+  background-color: #cc5200;
+}
+
+.login-button:disabled {
+  background-color: #cc5200;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
