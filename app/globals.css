@@ -769,3 +769,56 @@ select:hover {
   cursor: not-allowed;
 }
 
+.admin-dashboard-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #0a0a0a;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.admin-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+th, td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #0a0a0a;
+  font-weight: bold;
+}
+
+.archive-btn {
+  background-color: #e65c00;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.archive-btn:hover {
+  background-color: #cc5200;
+}
+
+.footer {
+  margin-top: 20px;
+  padding: 10px;
+  font-size: 0.9rem;
+  color: gray;
+  text-align: center;
+}
+
+
