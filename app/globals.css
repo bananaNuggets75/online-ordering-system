@@ -45,6 +45,42 @@ a {
   }
 }
 
+.home-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full screen height */
+  text-align: center;
+  background-color: #0a0a0a; 
+}
+
+.home-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.home-text {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.home-button {
+  background-color: #e65c00; /* Orange theme */
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.home-button:hover {
+  background-color: #cc5200;
+}
+
+
 /* ========== Menu Page ========== */
 .menu-container {
   padding: 20px;
