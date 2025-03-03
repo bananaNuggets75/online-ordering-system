@@ -654,3 +654,16 @@ select:hover {
 .submit-button:hover {
   background: #0056b3;
 }
+
+.clear-cart-btn, .checkout-btn {
+  background-color: #e65c00; /* Orange */
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+  margin: 0 8px;
+}
+
+.clear-cart-btn:hover, .checkout-btn:hover {
+  background-color: #cc5200; /* Darker Orange for Hover */
+}
