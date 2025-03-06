@@ -556,7 +556,7 @@ select:hover {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background-color: #808080;
+  background-color: #e65c00;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
   margin-bottom: 20px; 
@@ -689,7 +689,7 @@ select:hover {
 .submit-button {
   width: 100%;
   padding: 0.8rem;
-  background: #0e65a3;
+  background: #023047;
   color: white;
   font-weight: bold;
   border: none;
@@ -699,7 +699,7 @@ select:hover {
 }
 
 .submit-button:hover {
-  background: #0056b3;
+  background: #465569;
 }
 
 .clear-cart-btn, .checkout-btn {
@@ -763,7 +763,7 @@ select:hover {
 .login-button {
   width: 100%;
   padding: 12px;
-  background-color: #e65c00; /* Orange theme */
+  background-color: #023047; /* Orange theme */
   color: white;
   font-weight: bold;
   border-radius: 6px;
@@ -771,7 +771,7 @@ select:hover {
 }
 
 .login-button:hover {
-  background-color: #cc5200;
+  background-color: #365569;
 }
 
 .login-button:disabled {
