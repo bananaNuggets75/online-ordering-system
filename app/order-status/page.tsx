@@ -10,21 +10,22 @@ interface Order {
   contact: string;
   deliveryType: "Pickup" | "Delivery";
   status: "Pending" | "In-Process" | "Ready for Pickup" | "Out for Delivery" | "Completed";
+  queueNumber?: number | null; // New field for queue number
 }
+
+const MAX_QUEUE_SIZE = 20; // Maximum queue numbers
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [userOrderId, setUserOrderId] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false); // Fix for hydration issue
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true); // Ensures this runs only on the client
+    setIsClient(true);
 
-    // Retrieve the user's order ID from sessionStorage
     const storedUserOrderId = sessionStorage.getItem("userOrderId");
     setUserOrderId(storedUserOrderId);
 
-    // Firestore real-time listener for order updates
     const q = query(collection(db, "orders"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -32,13 +33,26 @@ const OrderStatusPage = () => {
         id: doc.id,
         ...doc.data(),
       })) as Order[];
-      setOrders(ordersData);
+
+      // Assign queue numbers automatically (1-20)
+      const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
+      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
+
+      // Assign numbers to active orders
+      activeOrders.forEach((order, index) => {
+        if (index < MAX_QUEUE_SIZE) {
+          order.queueNumber = availableNumbers[index]; // Assign queue number
+        } else {
+          order.queueNumber = null; // If more than 20 orders, no queue number
+        }
+      });
+
+      setOrders(activeOrders);
     });
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, []);
 
-  // Prevent rendering on the server to avoid hydration mismatch
   if (!isClient) {
     return null;
   }
@@ -46,21 +60,22 @@ const OrderStatusPage = () => {
   return (
     <div className="order-container">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Order Status</h1>
-  
+
       <div className="order-list">
         {orders.length > 0 ? (
           orders
-            .filter((order) => !userOrderId || order.id === userOrderId) // Filter for user's order
+            .filter((order) => !userOrderId || order.id === userOrderId) // Show only user's order
             .map((order) => (
               <div key={order.id} className="order-card">
                 <div className="order-header">
-                  <span className="order-id font-semibold">Order #{order.id}</span>
+                  <span className="order-id font-semibold">
+                    Order #{order.queueNumber ? order.queueNumber : "Waiting..."} {/* Show queue number */}
+                  </span>
                   <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
                     {order.status}
                   </span>
                 </div>
                 <p className="order-info">Name: {order.name || "N/A"}</p>
-                <p className="order-info">Contact: {order.contact || "N/A"}</p>
                 <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
               </div>
             ))
@@ -68,7 +83,7 @@ const OrderStatusPage = () => {
           <p className="text-center text-gray-600 text-lg">No orders found.</p>
         )}
       </div>
-    </div>  
+    </div>
   );
 };
 
