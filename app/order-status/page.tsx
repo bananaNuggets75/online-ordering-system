@@ -35,7 +35,7 @@ const OrderStatusPage = () => {
       })) as Order[];
 
       // Assign queue numbers automatically (1-20)
-      let availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
+      const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
       const activeOrders = ordersData.filter((order) => order.status !== "Completed");
 
       // Assign numbers to active orders
