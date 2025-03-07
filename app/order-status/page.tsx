@@ -14,20 +14,27 @@ interface Order {
 }
 
 const MAX_QUEUE_SIZE = 20;
+const LOCAL_STORAGE_KEY = "userOrders";
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userOrderId, setUserOrderId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
+  // Load stored user name and orders
   useEffect(() => {
     setIsClient(true);
 
-    // Retrieve user's order ID from sessionStorage
-    const storedUserOrderId = sessionStorage.getItem("userOrderId");
-    setUserOrderId(storedUserOrderId);
+    const storedUserName = sessionStorage.getItem("userName");
+    setUserName(storedUserName);
 
-    // Firestore real-time listener
+    const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedOrders) {
+      setOrders(JSON.parse(storedOrders));
+    }
+  }, []);
+
+  useEffect(() => {
     const q = query(collection(db, "orders"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map((doc) => ({
@@ -35,15 +42,15 @@ const OrderStatusPage = () => {
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers automatically
+      // Assign queue numbers to active orders only
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
-      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
+      const updatedOrders = ordersData.map((order) => ({
+        ...order,
+        queueNumber: order.status !== "Completed" ? availableNumbers.shift() ?? null : null,
+      }));
 
-      activeOrders.forEach((order, index) => {
-        order.queueNumber = index < MAX_QUEUE_SIZE ? availableNumbers[index] : null;
-      });
-
-      setOrders(activeOrders);
+      setOrders(updatedOrders);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders)); // Save to local storage
     });
 
     return () => unsubscribe();
@@ -60,7 +67,7 @@ const OrderStatusPage = () => {
       <div className="order-list">
         {orders.length > 0 ? (
           orders
-            .filter((order) => !userOrderId || order.id === userOrderId) // Show only user's order
+            .filter((order) => !userName || order.name === userName) // Show all orders under the same name
             .map((order) => (
               <div key={order.id} className="order-card">
                 <div className="order-header">
