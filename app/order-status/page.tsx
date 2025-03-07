@@ -15,17 +15,18 @@ interface Order {
 
 const MAX_QUEUE_SIZE = 20;
 const LOCAL_STORAGE_KEY = "userOrders";
+const USER_NAME_KEY = "userName";
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [userName, setUserName] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
-  // Load stored user name and orders
   useEffect(() => {
     setIsClient(true);
 
-    const storedUserName = sessionStorage.getItem("userName");
+    // Retrieve stored user name and orders
+    const storedUserName = localStorage.getItem(USER_NAME_KEY);
     setUserName(storedUserName);
 
     const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -42,7 +43,7 @@ const OrderStatusPage = () => {
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers to active orders only
+      // Assign queue numbers only for active orders
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
       const updatedOrders = ordersData.map((order) => ({
         ...order,
@@ -50,15 +51,19 @@ const OrderStatusPage = () => {
       }));
 
       setOrders(updatedOrders);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders)); // Save to local storage
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
+
+      // If the user's order is marked as "Completed", remove it from localStorage
+      if (userName && updatedOrders.some(order => order.name === userName && order.status === "Completed")) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        setOrders([]); // Clear local state as well
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [userName]);
 
-  if (!isClient) {
-    return null;
-  }
+  if (!isClient) return null;
 
   return (
     <div className="order-container">
@@ -67,7 +72,7 @@ const OrderStatusPage = () => {
       <div className="order-list">
         {orders.length > 0 ? (
           orders
-            .filter((order) => !userName || order.name === userName) // Show all orders under the same name
+            .filter((order) => !userName || order.name === userName) // Show only user's order
             .map((order) => (
               <div key={order.id} className="order-card">
                 <div className="order-header">
