@@ -15,19 +15,19 @@ interface Order {
 
 const MAX_QUEUE_SIZE = 20;
 const LOCAL_STORAGE_KEY = "userOrders";
-const USER_NAME_KEY = "userName";
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userName, setUserName] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
 
-    // Load stored user name
-    const storedUserName = localStorage.getItem(USER_NAME_KEY);
-    setUserName(storedUserName);
+    // Load stored orders on page load
+    const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedOrders) {
+      setOrders(JSON.parse(storedOrders));
+    }
   }, []);
 
   useEffect(() => {
@@ -39,17 +39,15 @@ const OrderStatusPage = () => {
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers only to active orders
+      // Assign queue numbers to active orders only
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
       const updatedOrders = ordersData.map((order) => ({
         ...order,
         queueNumber: order.status !== "Completed" ? availableNumbers.shift() ?? null : null,
       }));
 
-      // Update state
+      // Update state and store in localStorage
       setOrders(updatedOrders);
-
-      // Update local storage to persist orders
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
     });
 
@@ -64,23 +62,21 @@ const OrderStatusPage = () => {
 
       <div className="order-list">
         {orders.length > 0 ? (
-          orders
-            .filter((order) => !userName || order.name === userName) // Show only the user's order
-            .map((order) => (
-              <div key={order.id} className="order-card">
-                <div className="order-header">
-                  <span className="order-id font-semibold">
-                    Order #{order.queueNumber ? order.queueNumber : "Waiting..."}
-                  </span>
-                  <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
-                    {order.status}
-                  </span>
-                </div>
-                <p className="order-info">Name: {order.name || "N/A"}</p>
-                <p className="order-info">Contact: {order.contact || "N/A"}</p>
-                <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
+          orders.map((order) => (
+            <div key={order.id} className="order-card">
+              <div className="order-header">
+                <span className="order-id font-semibold">
+                  Order #{order.queueNumber ? order.queueNumber : "Waiting..."}
+                </span>
+                <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                  {order.status}
+                </span>
               </div>
-            ))
+              <p className="order-info">Name: {order.name || "N/A"}</p>
+              <p className="order-info">Contact: {order.contact || "N/A"}</p>
+              <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
+            </div>
+          ))
         ) : (
           <p className="text-center text-gray-600 text-lg">No orders found.</p>
         )}
