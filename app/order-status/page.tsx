@@ -14,20 +14,28 @@ interface Order {
 }
 
 const MAX_QUEUE_SIZE = 20;
+const LOCAL_STORAGE_KEY = "userOrders";
+const USER_NAME_KEY = "userName";
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userOrderId, setUserOrderId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
 
-    // Retrieve user's order ID from sessionStorage
-    const storedUserOrderId = sessionStorage.getItem("userOrderId");
-    setUserOrderId(storedUserOrderId);
+    // Retrieve stored user name and orders
+    const storedUserName = localStorage.getItem(USER_NAME_KEY);
+    setUserName(storedUserName);
 
-    // Firestore real-time listener
+    const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedOrders) {
+      setOrders(JSON.parse(storedOrders));
+    }
+  }, []);
+
+  useEffect(() => {
     const q = query(collection(db, "orders"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map((doc) => ({
@@ -35,23 +43,27 @@ const OrderStatusPage = () => {
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers automatically
+      // Assign queue numbers only for active orders
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
-      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
+      const updatedOrders = ordersData.map((order) => ({
+        ...order,
+        queueNumber: order.status !== "Completed" ? availableNumbers.shift() ?? null : null,
+      }));
 
-      activeOrders.forEach((order, index) => {
-        order.queueNumber = index < MAX_QUEUE_SIZE ? availableNumbers[index] : null;
-      });
+      setOrders(updatedOrders);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
 
-      setOrders(activeOrders);
+      // If the user's order is marked as "Completed", remove it from localStorage
+      if (userName && updatedOrders.some(order => order.name === userName && order.status === "Completed")) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        setOrders([]); // Clear local state as well
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [userName]);
 
-  if (!isClient) {
-    return null;
-  }
+  if (!isClient) return null;
 
   return (
     <div className="order-container">
@@ -60,7 +72,7 @@ const OrderStatusPage = () => {
       <div className="order-list">
         {orders.length > 0 ? (
           orders
-            .filter((order) => !userOrderId || order.id === userOrderId) // Show only user's order
+            .filter((order) => !userName || order.name === userName) // Show only user's order
             .map((order) => (
               <div key={order.id} className="order-card">
                 <div className="order-header">
