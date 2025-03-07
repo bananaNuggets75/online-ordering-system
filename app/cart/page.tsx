@@ -32,8 +32,8 @@ export default function CartPage() {
       const orderRef = await addDoc(collection(db, "orders"), {
         items: cart,
         customerInfo: {
-          name: "John Doe", // Replace with actual user data
-          contact: "john.doe@example.com",
+          name: "John Doe",
+          contact: "034805435",
         },
         status: "Received",
         timestamp: serverTimestamp(),
@@ -54,10 +54,17 @@ export default function CartPage() {
 
   return (
     <div className="cart-container">
-      <h1 className="cart-title">Your Cart</h1>
-
       {cart.length === 0 ? (
-        <p className="text-gray-500">Your cart is empty.</p>
+        <h1 className="cart-title">Your cart is empty.</h1>
+      ) : (
+        <>
+          <h1 className="cart-title">Almost There!</h1>
+          <p className="cart-subtitle">Please double-check your items before placing your order.</p>
+        </>
+      )}
+  
+      {cart.length === 0 ? (
+        <p className="text-gray-500">You have no items in your cart.</p>
       ) : (
         <div className="cart-list">
           {cart.map((item) => (
@@ -74,7 +81,7 @@ export default function CartPage() {
               </button>
             </div>
           ))}
-
+  
           {/* Total Price & Actions */}
           <div className="mt-4">
             <p className="text-xl font-bold">Total: ₱{totalPrice.toFixed(2)}</p>
@@ -91,4 +98,4 @@ export default function CartPage() {
       )}
     </div>
   );
-}
+}  

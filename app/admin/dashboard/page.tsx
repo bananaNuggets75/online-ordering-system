@@ -78,17 +78,26 @@ const AdminDashboard = () => {
         status: newStatus, 
         updatedAt: serverTimestamp(),
       });
-
+  
       const updatedOrders = orders.map((order) =>
         order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
       );
-
+  
       setOrders(updatedOrders);
       localStorage.setItem("orders", JSON.stringify(updatedOrders));
+  
+      if (newStatus === "Order Received") {
+        setTimeout(() => {
+          setSelectedOrders([orderId]);  // Temporarily set the selected order
+          archiveSelectedOrders();        // Archive based on `selectedOrders`
+        }, 60000);
+      }      
+  
     } catch (error) {
       console.error("Error updating order status: ", error);
     }
   };
+  
 
   const handleCheckboxChange = (orderId: string) => {
     setSelectedOrders((prev) =>
@@ -122,7 +131,7 @@ const AdminDashboard = () => {
   if (!authChecked) return <div className="p-6">Checking authentication...</div>;
 
   //To-do: 
-  // show price on the dashboard for recording purposes
+  // show price on the dashboard for recording purposes (to be decided)
   // show how many orders a certain product has for trend recording (optional: too lazy to do it)
 
   return (
@@ -166,15 +175,13 @@ const AdminDashboard = () => {
                   </td>
                   <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
                   <td>
-                  <select
-                    value={order.status}
-                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                  >
+                  <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
                     <option value="Pending">Pending</option>
-                    <option value="To be Paid">To be Paid</option> {/* New for COD */}
+                    <option value="To be Paid">To be Paid</option> 
                     <option value="In-Process">In-Process</option>
-                    <option value="Out for Delivery">Out for Delivery</option> {/* New */}
-                    <option value="Paid (Completed)">Paid (Completed)</option> {/* Renamed */}
+                    <option value="Out for Delivery">Out for Delivery</option>
+                    <option value="Paid (Completed)">Paid (Completed)</option>
+                    <option value="Order Received">Order Received</option> {/* New final status */}
                   </select>
                   </td>
                 </tr>
