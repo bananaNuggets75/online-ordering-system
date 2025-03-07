@@ -53,7 +53,7 @@ const AdminDashboard = () => {
             customerName: data.customerName || "N/A",
             contact: data.contact || "N/A",
             deliveryType: data.deliveryType || "N/A",
-            deliveryLocation: data.deliveryLocation || "N/A", // Ensure deliveryLocation is fetched
+            deliveryLocation: data.deliveryLocation || "N/A",
             status: data.status || "Pending",
             updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
           };
@@ -120,6 +120,10 @@ const AdminDashboard = () => {
   };
 
   if (!authChecked) return <div className="p-6">Checking authentication...</div>;
+
+  //To-do: 
+  // show price on the dashboard for recording purposes
+  // show how many orders a certain product has for trend recording (optional: too lazy to do it)
 
   return (
     <div className="admin-dashboard-container">
