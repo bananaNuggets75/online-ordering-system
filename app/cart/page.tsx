@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
@@ -9,6 +10,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 export default function CartPage() {
   const { cart, removeFromCart, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -27,7 +29,7 @@ export default function CartPage() {
     }
 
     try {
-      await addDoc(collection(db, "orders"), {
+      const orderRef = await addDoc(collection(db, "orders"), {
         items: cart,
         customerInfo: {
           name: "John Doe", // Replace with actual user data
@@ -37,8 +39,13 @@ export default function CartPage() {
         timestamp: serverTimestamp(),
       });
 
-      toast.success("Order Placed!");
+      const orderId = orderRef.id; // Get the order ID
+      sessionStorage.setItem("orderId", orderId); // Store it temporarily
       clearCart(); // Clear cart after successful order
+      toast.success("Order Placed!");
+
+      // Redirect to the confirmation page
+      router.push("/checkout/confirm");
     } catch (error) {
       toast.error("Failed to place order");
       console.error("Order error:", error);

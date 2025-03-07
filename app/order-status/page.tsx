@@ -10,10 +10,10 @@ interface Order {
   contact: string;
   deliveryType: "Pickup" | "Delivery";
   status: "Pending" | "In-Process" | "Ready for Pickup" | "Out for Delivery" | "Completed";
-  queueNumber?: number | null; // New field for queue number
+  queueNumber?: number | null;
 }
 
-const MAX_QUEUE_SIZE = 20; // Maximum queue numbers
+const MAX_QUEUE_SIZE = 20;
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -23,28 +23,24 @@ const OrderStatusPage = () => {
   useEffect(() => {
     setIsClient(true);
 
+    // Retrieve user's order ID from sessionStorage
     const storedUserOrderId = sessionStorage.getItem("userOrderId");
     setUserOrderId(storedUserOrderId);
 
+    // Firestore real-time listener
     const q = query(collection(db, "orders"));
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers automatically (1-20)
+      // Assign queue numbers automatically
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
       const activeOrders = ordersData.filter((order) => order.status !== "Completed");
 
-      // Assign numbers to active orders
       activeOrders.forEach((order, index) => {
-        if (index < MAX_QUEUE_SIZE) {
-          order.queueNumber = availableNumbers[index]; // Assign queue number
-        } else {
-          order.queueNumber = null; // If more than 20 orders, no queue number
-        }
+        order.queueNumber = index < MAX_QUEUE_SIZE ? availableNumbers[index] : null;
       });
 
       setOrders(activeOrders);
@@ -69,13 +65,14 @@ const OrderStatusPage = () => {
               <div key={order.id} className="order-card">
                 <div className="order-header">
                   <span className="order-id font-semibold">
-                    Order #{order.queueNumber ? order.queueNumber : "Waiting..."} {/* Show queue number */}
+                    Order #{order.queueNumber ? order.queueNumber : "Waiting..."}
                   </span>
                   <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
                     {order.status}
                   </span>
                 </div>
                 <p className="order-info">Name: {order.name || "N/A"}</p>
+                <p className="order-info">Contact: {order.contact || "N/A"}</p>
                 <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
               </div>
             ))

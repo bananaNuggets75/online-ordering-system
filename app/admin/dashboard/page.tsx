@@ -162,14 +162,16 @@ const AdminDashboard = () => {
                   </td>
                   <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
                   <td>
-                    <select
-                      value={order.status}
-                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In-Process">In-Process</option>
-                      <option value="Completed">Completed</option>
-                    </select>
+                  <select
+                    value={order.status}
+                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="To be Paid">To be Paid</option> {/* New for COD */}
+                    <option value="In-Process">In-Process</option>
+                    <option value="Out for Delivery">Out for Delivery</option> {/* New */}
+                    <option value="Paid (Completed)">Paid (Completed)</option> {/* Renamed */}
+                  </select>
                   </td>
                 </tr>
               ))}
