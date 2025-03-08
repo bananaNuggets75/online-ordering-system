@@ -63,7 +63,7 @@ const OrderStatusPage = () => {
 
   // 🔊 Function to play notification sound
   const playNotificationSound = () => {
-    const audio = new Audio("public/new-order.mp3"); // Place this file in `public/`
+    const audio = new Audio("/new-order.mp3"); // Place this file in `public/`
     audio.play().catch((error) => console.error("Audio playback failed:", error));
   };
 
