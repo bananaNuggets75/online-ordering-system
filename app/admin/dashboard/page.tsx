@@ -38,9 +38,9 @@ const AdminDashboard = () => {
     });
 
     return () => unsubscribe();
-  }, [router]);
+}, [router]);
 
-  useEffect(() => {
+useEffect(() => {
     if (!user) return;
 
     const ordersRef = collection(db, "orders");
@@ -63,18 +63,18 @@ const AdminDashboard = () => {
         playSound("/new-order.mp3");
       }
 
-
       setOrders(updatedOrders);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user, orders]);
+}, [user]); // ✅ Fixed dependency array
 
-  const playSound = (filePath: string) => {
+const playSound = (filePath: string) => {
     const audio = new Audio(filePath);
     audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
-  };
+};
+
   
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {

@@ -86,7 +86,6 @@ const OrderStatusPage = () => {
                 </span>
               </div>
               <p className="order-info">Name: {order.name || "N/A"}</p>
-              <p className="order-info">Contact: {order.contact || "N/A"}</p>
               <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
             </div>
           ))
