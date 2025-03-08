@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, onSnapshot } from "firebase/firestore";
@@ -22,8 +20,6 @@ const OrderStatusPage = () => {
 
   useEffect(() => {
     setIsClient(true);
-
-    // Load stored orders on page load
     const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (storedOrders) {
       setOrders(JSON.parse(storedOrders));
@@ -31,7 +27,6 @@ const OrderStatusPage = () => {
   }, []);
 
   useEffect(() => {
-    // Firestore real-time listener
     const q = query(collection(db, "orders"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map((doc) => ({
@@ -39,20 +34,36 @@ const OrderStatusPage = () => {
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers to active orders only
+      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
-      const updatedOrders = ordersData.map((order) => ({
+
+      const updatedOrders = activeOrders.map((order) => ({
         ...order,
-        queueNumber: order.status !== "Completed" ? availableNumbers.shift() ?? null : null,
+        queueNumber: availableNumbers.shift() ?? null,
       }));
 
-      // Update state and store in localStorage
+      // Compare previous orders with new ones to detect status change
+      orders.forEach((prevOrder) => {
+        const newOrder = updatedOrders.find((o) => o.id === prevOrder.id);
+        if (newOrder && newOrder.status !== prevOrder.status) {
+          if (["Ready for Pickup", "Out for Delivery"].includes(newOrder.status)) {
+            playNotificationSound();
+          }
+        }
+      });
+
       setOrders(updatedOrders);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [orders]);
+
+  // 🔊 Function to play notification sound
+  const playNotificationSound = () => {
+    const audio = new Audio("public/new-order.mp3"); // Place this file in `public/`
+    audio.play().catch((error) => console.error("Audio playback failed:", error));
+  };
 
   if (!isClient) return null;
 
