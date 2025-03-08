@@ -60,14 +60,14 @@ const AdminDashboard = () => {
 
       // Play notification sound for new orders
       if (orders.length < updatedOrders.length) {
-        playSound("public/new-order.mp3");
+        playSound("/new-order.mp3");
       }
 
       // Play notification sound for status updates
       updatedOrders.forEach((newOrder) => {
         const oldOrder = orders.find((o) => o.id === newOrder.id);
         if (oldOrder && oldOrder.status !== newOrder.status) {
-          playSound("public/new-order.mp3");
+          playSound("/new-order.mp3");
         }
       });
 
@@ -78,10 +78,17 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, [user, orders]);
 
-  const playSound = (soundPath: string) => {
-    const audio = new Audio(soundPath);
-    audio.play();
+  const playSound = (filePath: string) => {
+    const playAudio = () => {
+      const audio = new Audio(filePath);
+      audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
+      document.removeEventListener("click", playAudio); // Remove listener after first interaction
+    };
+  
+    // Wait for user interaction if not yet allowed
+    document.addEventListener("click", playAudio, { once: true });
   };
+  
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
