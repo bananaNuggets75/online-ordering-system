@@ -1,8 +1,8 @@
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  --primary: #ff6600;
-  --primary-dark: #e65c00;
+  --foreground: #f8f8f8;
+  --primary: #FFBF00;  
+  --primary-dark: #F0A300; 
   --border-color: #ddd;
   --text-color: #222;
   --button-bg: #ddd;
@@ -12,17 +12,20 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
-    --border-color: #333;
+    --foreground: #1c1c1c; 
+    --border-color: #444;
     --text-color: #fff;
     --button-bg: #333;
     --button-text: #fff;
+    --primary: #FFBF00;  
+    --primary-dark: #F0A300;
   }
   html {
     color-scheme: dark;
   }
 }
 
+/* Global Styles */
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
@@ -36,34 +39,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-button {
-  background-color: var(--button-bg);
-  color: var(--button-text);
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: none;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-
+/* Home Container */
 .home-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Full screen height */
+  height: 100vh;
   text-align: center;
-  background-color: #0a0a0a; 
+  background-color: var(--background);
 }
 
 .home-title {
@@ -77,9 +61,10 @@ a {
   margin-bottom: 20px;
 }
 
+/* Home Button */
 .home-button {
-  background-color: #e65c00; /* Orange theme */
-  color: white;
+  background-color: var(--primary-dark);
+  color: #000;
   padding: 12px 24px;
   border-radius: 6px;
   font-size: 1rem;
@@ -88,36 +73,49 @@ a {
 }
 
 .home-button:hover {
-  background-color: #cc5200;
+  background-color: var(--primary);
 }
 
-
-/* ========== Menu Page ========== */
+/* Menu Section */
 .menu-container {
+  position: relative;
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
   text-align: left;
+  z-index: 900;
 }
 
 .search-bar {
   margin-bottom: 20px;
+  position: relative;
 }
 
 .search-bar input {
   width: 100%;
   padding: 10px;
   border: 1px solid var(--border-color);
-  border-radius: 8px; /* Slightly more rounded */
+  border-radius: 8px;
   font-size: 16px;
   box-sizing: border-box;
-  padding-left: 35px; /* Add padding for search icon */
-  background-image: url("/search-icon.png"); /* Add search icon */
-  background-size: 20px;
-  background-position: 10px center;
-  background-repeat: no-repeat;
+  padding-left: 35px;
+  background-color: var(--background);
+  color: var(--text-color);
 }
 
+/* Search Icon */
+.search-bar::before {
+  content: "🔍";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+/* Menu List */
 .menu-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -125,15 +123,16 @@ a {
   padding: 0;
 }
 
+/* Menu Items */
 .menu-item {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background-color: #141414; 
+  background-color: var(--foreground); /* Updated for better dark mode contrast */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s;
   cursor: pointer;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .menu-item:hover {
@@ -141,14 +140,16 @@ a {
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
+/* Image */
 .menu-item-image {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  border-radius: 10px 10px 0 0; /* Round only top corners */
+  border-radius: 10px 10px 0 0;
   margin-bottom: 10px;
 }
 
+/* Content */
 .menu-item-content {
   display: flex;
   flex-direction: column;
@@ -165,6 +166,7 @@ a {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
+  color: var(--text-color);
 }
 
 .menu-price {
@@ -173,23 +175,56 @@ a {
   color: var(--primary);
 }
 
-.menu-item-description {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 10px;
-  overflow: hidden; /* Hide overflowing text */
-  text-overflow: ellipsis; /* Add ellipsis (...) for overflow */
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Show only 2 lines */
-  -webkit-box-orient: vertical;
+/* Improved Text Readability */
+@media (prefers-color-scheme: dark) {
+  .menu-item h3,
+  .menu-price {
+    color: #fff; /* White text for better visibility */
+  }
+
+  .menu-item-description {
+    color: #ccc; /* Light gray for readability */
+  }
 }
 
+/* Description */
+.menu-item-description {
+  font-size: 14px;
+  color: var(--text-color);
+  margin-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: pre-line;
+}
+
+/* Actions */
 .menu-item-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+/* Button */
+.menu-item button {
+  background-color: var(--primary);
+  color: #000;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.menu-item button:hover {
+  background-color: var(--primary-dark);
+}
+
+
+/* ========== Add to Cart Button ========== */
 .add-to-cart {
   background: var(--primary);
   color: white;
@@ -199,13 +234,21 @@ a {
   border-radius: 5px;
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.3s;
+  transition: background 0.3s, transform 0.2s;
+  outline: none;
 }
 
 .add-to-cart:hover {
   background: var(--primary-dark);
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+.add-to-cart:focus {
+  box-shadow: 0 0 5px var(--primary);
+}
+
+/* ========== Rating ========== */
 .rating {
   color: #ffc107;
   font-size: 16px;
@@ -213,16 +256,17 @@ a {
 
 /* ========== Sidebar ========== */
 .burger-menu {
+  position: absolute;
   font-size: 26px;
   background: none;
   border: none;
   cursor: pointer;
-  position: fixed;
   top: 15px;
   left: 15px;
   z-index: 1000;
   color: var(--primary);
   padding: 8px;
+  z-index: 1100;
 }
 
 .sidebar {
@@ -231,20 +275,30 @@ a {
   left: -280px; /* Hidden by default */
   width: 280px;
   height: 100%;
-  background: #222;
+  background: var(--foreground); /* Updated for consistency */
   color: white;
   transition: left 0.3s ease-in-out;
   padding-top: 60px;
+  z-index: 1000;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar.open {
   left: 0; /* Show when open */
+  z-index: 1100; 
+}
+
+/* Responsive Sidebar Width */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 70vw;
+  }
 }
 
 .sidebar ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .sidebar ul li {
@@ -256,13 +310,54 @@ a {
   color: white;
   text-decoration: none;
   display: block;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.2s;
 }
+
+/* Improved sidebar contrast in dark mode */
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background: var(--foreground);
+  }
+
+  .sidebar ul li a {
+    color: #ddd;
+  }
+
+  .sidebar ul li a:hover {
+    color: var(--primary);
+  }
+
+  .burger-menu {
+    color: #fff;
+  }
+}
+
+/* Light Mode Sidebar Text Color Fix */
+@media (prefers-color-scheme: light) {
+  .sidebar {
+    background: var(--foreground);
+  }
+
+  .sidebar ul li a {
+    color: black !important; 
+  }
+
+  .sidebar ul li a:hover {
+    color: var(--primary);
+  }
+
+  .burger-menu {
+    color: black !important; 
+  }
+}
+
 
 .sidebar ul li a:hover {
   color: var(--primary);
+  transform: translateX(5px);
 }
 
+/* ========== Close Button ========== */
 .close-btn {
   position: absolute;
   top: 15px;
@@ -272,6 +367,20 @@ a {
   border: none;
   color: white;
   cursor: pointer;
+}
+
+.close-btn:hover {
+  color: var(--primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .close-btn {
+    color: #ddd;
+  }
+
+  .close-btn:hover {
+    color: var(--primary);
+  }
 }
 
 /* ========== Cart Page ========== */
@@ -328,6 +437,18 @@ a {
   background: var(--primary-dark);
 }
 
+/* Improve Cart Items in Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .cart-item {
+    background: #1c1c1c;
+  }
+
+  .cart-item p {
+    color: #bbb;
+  }
+}
+
+/* ========== Menu Details ========== */
 .menu-details-container {
   padding: 20px;
   max-width: 600px;
@@ -350,19 +471,25 @@ a {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
-  background-color: #141414; 
+  background-color: var(--foreground);
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu-details {
+    background-color: #1a1a1a;
+  }
 }
 
 .menu-details-image {
   width: 100%;
-  max-height: 400px; /* Increased max height */
-  object-fit: contain; /* Or cover, depending on desired effect */
+  max-height: 400px;
+  object-fit: contain;
   border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .menu-details-content {
-    text-align: center;
+  text-align: center;
 }
 
 .menu-details-title {
@@ -375,7 +502,13 @@ a {
   font-size: 16px;
   color: #555;
   margin-bottom: 15px;
-  white-space: pre-wrap; /* Preserve line breaks */
+  white-space: pre-wrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu-details-description {
+    color: #ccc;
+  }
 }
 
 .menu-details-price {
@@ -385,6 +518,7 @@ a {
   margin-bottom: 20px;
 }
 
+/* ========== Quantity Controls ========== */
 .quantity-controls {
   display: flex;
   align-items: center;
@@ -395,20 +529,31 @@ a {
 .quantity-controls button {
   background: none;
   border: 1px solid var(--border-color);
-  padding: 8px 15px; /* Adjusted padding */
+  padding: 8px 15px;
   cursor: pointer;
   border-radius: 5px;
   font-size: 16px;
 }
 
 .quantity-controls span {
-  margin: 0 15px; /* Adjusted margin */
+  margin: 0 15px;
   font-size: 16px;
 }
 
-.add-to-cart { /* Re-using the same class from MenuPage */
-  /* ... (styles already defined) */
-  padding: 10px 18px; /* Slightly larger button on details page */
+@media (prefers-color-scheme: dark) {
+  .quantity-controls button {
+    border: 1px solid #666;
+    color: #fff;
+  }
+
+  .quantity-controls span {
+    color: #ddd;
+  }
+}
+
+/* ========== Add to Cart Button ========== */
+.add-to-cart {
+  padding: 10px 18px;
   font-size: 16px;
 }
 
@@ -439,11 +584,30 @@ a {
   cursor: not-allowed;
 }
 
-/* Table container */
+@media (prefers-color-scheme: dark) {
+  .checkout-button:disabled {
+    background: #555;
+    color: #aaa;
+  }
+}
+
+/* ========== Table Styling ========== */
 .table-container {
   width: 100%;
   overflow-x: auto;
   margin-top: 30px;
+}
+
+:root {
+  --secondary-bg: #f8f8f8;
+  --hover-bg: #eaeaea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --secondary-bg: #1c1c1c;
+    --hover-bg: #333;
+  }
 }
 
 /* Table base styling */
@@ -474,6 +638,12 @@ tr:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+@media (prefers-color-scheme: dark) {
+  tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
 /* Links inside table */
 td a {
   color: #9abaff;
@@ -486,7 +656,7 @@ td a:hover {
   text-decoration: underline;
 }
 
-/* Dropdown styling */
+/* ========== Dropdown Styling ========== */
 select {
   padding: 8px;
   border: 1px solid var(--border-color);
@@ -497,32 +667,47 @@ select {
   transition: all 0.3s ease;
 }
 
-/* Apply hover effect to the select dropdown */
 select:hover {
   background: var(--hover-bg);
 }
 
-/* Status Colors */
+@media (prefers-color-scheme: dark) {
+  select {
+    background: #222;
+    color: #ddd;
+    border-color: #444;
+  }
+
+  select:hover {
+    background: #333;
+  }
+}
+
+/* ========== Status Colors ========== */
 .status-pending {
-  color: #facc15; 
+  color: #facc15;
 }
 
 .status-in-process {
-  color: #f10c0c; 
+  color: #f10c0c;
 }
 
-.status-completed {
-  color: #22c55e; 
-}
 .status-out-for-delivery {
   background-color: #6f42c1;
   color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  display: inline-block;
 }
 
 .status-completed {
   background-color: #28a745;
   color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+  display: inline-block;
 }
+
 
 
 
@@ -556,10 +741,10 @@ select:hover {
   padding: 15px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background-color: #e65c00;
+  background-color: var(--primary);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
-  margin-bottom: 20px; 
+  margin-bottom: 20px;
 }
 
 .order-card:hover {
@@ -567,6 +752,15 @@ select:hover {
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
+/* Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+  .order-card {
+    background-color: #d8a300;
+    border: 1px solid #555;
+  }
+}
+
+/* Order Header */
 .order-header {
   display: flex;
   justify-content: space-between;
@@ -574,28 +768,46 @@ select:hover {
   margin-bottom: 10px;
 }
 
+/* Status Badge */
 .status-badge {
   font-size: 14px;
   font-weight: bold;
   padding: 5px 10px;
   border-radius: 5px;
   text-transform: uppercase;
+  background-color: #fff;
+  color: #121212;
 }
 
-/* Order information */
+@media (prefers-color-scheme: dark) {
+  .status-badge {
+    background-color: #333;
+    color: #facc15;
+  }
+}
+
+/* Order Information */
 .order-id {
   font-size: 18px;
   font-weight: bold;
-  color: #121212;
+  color: var(--text-color);
 }
 
 .order-info {
   font-size: 14px;
-  color: #bbb;
+  color: var(--text-color);
   margin-top: 4px;
 }
 
+@media (prefers-color-scheme: dark) {
+  .order-info {
+    color: #ccc;
+  }
+}
+
+
 /* Status badge styling */
+/* Status Badge */
 .status-badge {
   display: inline-block;
   padding: 8px 16px;
@@ -604,38 +816,47 @@ select:hover {
   text-align: center;
   min-width: 140px;
   margin-top: 12px;
+  background-color: #fff;
+  color: #222;
 }
 
+@media (prefers-color-scheme: dark) {
+  .status-badge {
+    background-color: #333;
+    color: #facc15;
+  }
+}
 
+/* Archive Button */
 .archive-btn {
-  background-color: #4a55a2; /* Similar dark blue/purple */
+  background-color: #4a55a2;
   color: white;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-  cursor: pointer; /* Indicate it's clickable */
-  font-family: sans-serif; /* Clean font */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  font-family: sans-serif;
   font-size: 16px;
-  display: inline-flex; /* To align icon and text */
-  align-items: center; /* Vertical centering */
+  display: inline-flex;
+  align-items: center;
   margin: 0 auto;
 }
 
-/* Icon styling (using Font Awesome as an example) */
+/* Icon Fix */
 .archive-btn::before {
   font-family: 'Font Awesome 5 Free';
   font-weight: 900;
-  content: '\f187'; /* Archive box icon code */
-  margin-right: 8px; /* Space between icon and text */
-  font-size: 40px;
+  content: '\f187';
+  margin-right: 8px;
+  font-size: 18px;
 }
 
-.flex.justify-center.mt-6.p-6 { /* This is the div surrounding your button */
+.flex.justify-center.mt-6.p-6 {
   display: flex;
   justify-content: center;
-  margin-top: 24px; /* Adjust as needed for top padding */
-  padding: 24px;   /* Adjust as needed for top and bottom padding */
+  margin-top: 24px;
+  padding: 24px;
 }
 
 /* Order Form Container */
@@ -643,9 +864,15 @@ select:hover {
   max-width: 500px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #F56300;
+  background: var(--primary);
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .order-form-container {
+    background: #d8a300;
+  }
 }
 
 /* Title */
@@ -685,6 +912,15 @@ select:hover {
   font-size: 1rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  .form-input,
+  .form-select {
+    background: #222;
+    color: #ddd;
+    border: 1px solid #555;
+  }
+}
+
 /* Submit Button */
 .submit-button {
   width: 100%;
@@ -699,31 +935,81 @@ select:hover {
 }
 
 .submit-button:hover {
-  background: #465569;
+  background: #035f81;
 }
 
+/* Cart Buttons */
 .clear-cart-btn, .checkout-btn {
-  background-color: #e65c00; /* Orange */
-  color: white;
+  background-color: var(--primary); /* Yellow */
+  color: black; /* Improved contrast */
   padding: 10px 16px;
   border-radius: 6px;
   transition: background-color 0.3s;
   margin: 0 8px;
+  border: none; 
+  outline: none;
 }
 
 .clear-cart-btn:hover, .checkout-btn:hover {
-  background-color: #cc5200; /* Darker Orange for Hover */
+  background-color: var(--primary-dark); /* Darker yellow */
+  color: black; /* Ensure text stays readable */
+  cursor: pointer;
 }
 
+.remove-btn {
+  background-color: var(--primary);
+  color: black !important;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: none;
+  transition: background-color 0.3s, color 0.3s;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  background-color: var(--primary-dark);
+  color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  .remove-btn {
+    background-color: var(--primary);
+    color: black; /* Make sure text stays readable */
+  }
+}
+
+
+
+@media (prefers-color-scheme: dark) {
+  .clear-cart-btn,
+  .checkout-btn {
+    background-color: #d8a300;
+  }
+
+  .clear-cart-btn:hover,
+  .checkout-btn:hover {
+    background-color: #c28b00;
+  }
+}
+
+
+/* Admin Login Container */
 .admin-login-container {
   max-width: 400px;
   margin: 40px auto;
   padding: 24px;
-  background: #F86400;
+  background: var(--primary);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+@media (prefers-color-scheme: dark) {
+  .admin-login-container {
+    background: #d8a300;
+  }
+}
+
+/* Login Title */
 .admin-login-title {
   font-size: 1.5rem;
   font-weight: bold;
@@ -731,12 +1017,14 @@ select:hover {
   text-align: center;
 }
 
+/* Error Message */
 .error-message {
   color: #e63946;
   font-size: 0.875rem;
   text-align: center;
 }
 
+/* Form Styling */
 .login-form {
   display: flex;
   flex-direction: column;
@@ -760,10 +1048,19 @@ select:hover {
   border-radius: 6px;
 }
 
+@media (prefers-color-scheme: dark) {
+  .form-input {
+    background: #222;
+    color: #ddd;
+    border: 1px solid #555;
+  }
+}
+
+/* Login Button */
 .login-button {
   width: 100%;
   padding: 12px;
-  background-color: #023047; /* Orange theme */
+  background-color: #023047;
   color: white;
   font-weight: bold;
   border-radius: 6px;
@@ -771,7 +1068,7 @@ select:hover {
 }
 
 .login-button:hover {
-  background-color: #365569;
+  background-color: #035f81;
 }
 
 .login-button:disabled {
@@ -780,22 +1077,25 @@ select:hover {
   cursor: not-allowed;
 }
 
+/* Admin Dashboard */
 .admin-dashboard-container {
   max-width: 100%;
   margin: 0 auto;
   padding: 20px;
-  background-color: #0a0a0a;
+  background-color: var(--background);
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
+/* Admin Title */
 .admin-title {
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 20px;
 }
 
+/* Table */
 .table-container {
   overflow-x: auto;
 }
@@ -807,10 +1107,11 @@ th, td {
 }
 
 th {
-  background-color: #0a0a0a;
+  background-color: var(--background);
   font-weight: bold;
 }
 
+/* Archive Button */
 .archive-btn {
   background-color: #e65c00;
   color: white;
@@ -821,9 +1122,20 @@ th {
 }
 
 .archive-btn:hover {
-  background-color: #cc5200;
+  background-color: #F0A300;
 }
 
+@media (prefers-color-scheme: dark) {
+  .archive-btn {
+    background-color: #f56a00;
+  }
+
+  .archive-btn:hover {
+    background-color: #c85200;
+  }
+}
+
+/* Footer */
 .footer {
   margin-top: 20px;
   padding: 10px;
@@ -832,27 +1144,45 @@ th {
   text-align: center;
 }
 
+@media (prefers-color-scheme: dark) {
+  .footer {
+    color: #bbb;
+  }
+}
+
+/* Hide Sidebar */
 .admin-dashboard-container .sidebar {
   display: none;
 }
 
-/* Confirm Page Custom Styles */
+/* Confirmation Container */
 .confirm-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: black; 
+  background-color: var(--background) !important;
   padding: 20px;
+  text-align: center;
+  transition: background 0.3s ease-in-out;
 }
 
+
+/* Title */
 .confirm-container h1 {
   font-size: 1.5rem;
   font-weight: bold;
   color: var(--foreground);
 }
 
+@media (prefers-color-scheme: dark) {
+  .confirm-container h1 {
+    color: #facc15;
+  }
+}
+
+/* Description */
 .confirm-container p {
   color: var(--text-color);
   margin-top: 10px;
@@ -868,6 +1198,7 @@ th {
   max-width: 300px;
 }
 
+/* Payment Button */
 .pay-btn {
   width: 100%;
   padding: 12px;
@@ -879,6 +1210,7 @@ th {
   border: 1px solid var(--border-color);
   transition: all 0.3s ease-in-out;
   text-align: center;
+  cursor: pointer; 
 }
 
 .pay-btn:hover {
@@ -890,14 +1222,15 @@ th {
 /* GCash Button */
 .pay-btn.primary {
   background-color: var(--primary);
-  color: #fff;
+  color: black; /* Better contrast */
 }
 
 .pay-btn.primary:hover {
   background-color: var(--primary-dark);
+  color: black;
 }
 
-/* Cash on Delivery Button */
+/* Over-the-Counter Payment */
 .pay-btn.secondary {
   background-color: var(--button-bg);
   color: var(--button-text);
@@ -905,6 +1238,24 @@ th {
 
 .pay-btn.secondary:hover {
   background-color: var(--border-color);
+  color: var(--foreground);
+}
+
+/* Ensure Cursor Pointer Applies */
+button, .pay-btn {
+  cursor: pointer !important;
+}
+
+/* Dark Mode Fix for Secondary Button */
+@media (prefers-color-scheme: dark) {
+  .pay-btn.secondary {
+    background-color: #222;
+    color: #ddd;
+  }
+
+  .pay-btn.secondary:hover {
+    background-color: #333;
+  }
 }
 
 /* QR Code Container */
@@ -918,6 +1269,13 @@ th {
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   max-width: 200px;
   background: var(--foreground);
+}
+
+/* Dark Mode Fix for QR Code */
+@media (prefers-color-scheme: dark) {
+  .qr-container img {
+    background: #222;
+  }
 }
 
 .qr-container p {

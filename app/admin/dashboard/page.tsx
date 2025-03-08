@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -38,56 +38,43 @@ const AdminDashboard = () => {
     });
 
     return () => unsubscribe();
-  }, [router]);
+}, [router]);
 
-  useEffect(() => {
-    if (!user) return;
+useEffect(() => {
+  if (!user) return;
 
-    const ordersRef = collection(db, "orders");
-    const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
-      const updatedOrders = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          customerName: data.customerName || "N/A",
-          contact: data.contact || "N/A",
-          deliveryType: data.deliveryType || "N/A",
-          deliveryLocation: data.deliveryLocation || "N/A",
-          status: data.status || "Pending",
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
-        };
-      }) as Order[];
+  const ordersRef = query(collection(db, "orders"), orderBy("queueNumber", "asc"));
+  const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
+    const updatedOrders = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        customerName: data.customerName || "N/A",
+        contact: data.contact || "N/A",
+        deliveryType: data.deliveryType || "N/A",
+        deliveryLocation: data.deliveryLocation || "N/A",
+        status: data.status || "Pending",
+        queueNumber: data.queueNumber || null,
+        updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
+      };
+    }) as Order[];
 
-      // Play notification sound for new orders
-      if (orders.length < updatedOrders.length) {
-        playSound("/new-order.mp3");
-      }
+    // Play notification sound for new orders
+    if (orders.length < updatedOrders.length) {
+      playSound("/new-order.mp3");
+    }
 
-      // Play notification sound for status updates
-      updatedOrders.forEach((newOrder) => {
-        const oldOrder = orders.find((o) => o.id === newOrder.id);
-        if (oldOrder && oldOrder.status !== newOrder.status) {
-          playSound("/new-order.mp3");
-        }
-      });
+    setOrders(updatedOrders);
+    setLoading(false);
+  });
 
-      setOrders(updatedOrders);
-      setLoading(false);
-    });
+  return () => unsubscribe();
+}, [user, orders.length]);
 
-    return () => unsubscribe();
-  }, [user, orders]);
-
-  const playSound = (filePath: string) => {
-    const playAudio = () => {
-      const audio = new Audio(filePath);
-      audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
-      document.removeEventListener("click", playAudio); // Remove listener after first interaction
-    };
-  
-    // Wait for user interaction if not yet allowed
-    document.addEventListener("click", playAudio, { once: true });
-  };
+const playSound = (filePath: string) => {
+  const audio = new Audio(filePath);
+  audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
+};
   
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
