@@ -63,13 +63,6 @@ const AdminDashboard = () => {
         playSound("/new-order.mp3");
       }
 
-      // Play notification sound for status updates
-      updatedOrders.forEach((newOrder) => {
-        const oldOrder = orders.find((o) => o.id === newOrder.id);
-        if (oldOrder && oldOrder.status !== newOrder.status) {
-          playSound("/new-order.mp3");
-        }
-      });
 
       setOrders(updatedOrders);
       setLoading(false);
@@ -79,14 +72,8 @@ const AdminDashboard = () => {
   }, [user, orders]);
 
   const playSound = (filePath: string) => {
-    const playAudio = () => {
-      const audio = new Audio(filePath);
-      audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
-      document.removeEventListener("click", playAudio); // Remove listener after first interaction
-    };
-  
-    // Wait for user interaction if not yet allowed
-    document.addEventListener("click", playAudio, { once: true });
+    const audio = new Audio(filePath);
+    audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
   };
   
 
