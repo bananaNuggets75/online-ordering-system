@@ -15,23 +15,20 @@ interface Order {
 
 const MAX_QUEUE_SIZE = 20;
 const LOCAL_STORAGE_KEY = "userOrders";
-const USER_NAME_KEY = "userName";
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [userName, setUserName] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-
-    // Load stored user name
-    const storedUserName = localStorage.getItem(USER_NAME_KEY);
-    setUserName(storedUserName);
+    const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedOrders) {
+      setOrders(JSON.parse(storedOrders));
+    }
   }, []);
 
   useEffect(() => {
-    // Firestore real-time listener
     const q = query(collection(db, "orders"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map((doc) => ({
@@ -39,22 +36,36 @@ const OrderStatusPage = () => {
         ...doc.data(),
       })) as Order[];
 
-      // Assign queue numbers only to active orders
+      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
       const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
-      const updatedOrders = ordersData.map((order) => ({
+
+      const updatedOrders = activeOrders.map((order) => ({
         ...order,
-        queueNumber: order.status !== "Completed" ? availableNumbers.shift() ?? null : null,
+        queueNumber: availableNumbers.shift() ?? null,
       }));
 
-      // Update state
-      setOrders(updatedOrders);
+      // Compare previous orders with new ones to detect status change
+      orders.forEach((prevOrder) => {
+        const newOrder = updatedOrders.find((o) => o.id === prevOrder.id);
+        if (newOrder && newOrder.status !== prevOrder.status) {
+          if (["Ready for Pickup", "Out for Delivery"].includes(newOrder.status)) {
+            playNotificationSound();
+          }
+        }
+      });
 
-      // Update local storage to persist orders
+      setOrders(updatedOrders);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [orders]);
+
+  // 🔊 Function to play notification sound
+  const playNotificationSound = () => {
+    const audio = new Audio("public/new-order.mp3"); // Place this file in `public/`
+    audio.play().catch((error) => console.error("Audio playback failed:", error));
+  };
 
   if (!isClient) return null;
 
@@ -64,23 +75,21 @@ const OrderStatusPage = () => {
 
       <div className="order-list">
         {orders.length > 0 ? (
-          orders
-            .filter((order) => !userName || order.name === userName) // Show only the user's order
-            .map((order) => (
-              <div key={order.id} className="order-card">
-                <div className="order-header">
-                  <span className="order-id font-semibold">
-                    Order #{order.queueNumber ? order.queueNumber : "Waiting..."}
-                  </span>
-                  <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
-                    {order.status}
-                  </span>
-                </div>
-                <p className="order-info">Name: {order.name || "N/A"}</p>
-                <p className="order-info">Contact: {order.contact || "N/A"}</p>
-                <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
+          orders.map((order) => (
+            <div key={order.id} className="order-card">
+              <div className="order-header">
+                <span className="order-id font-semibold">
+                  Order #{order.queueNumber ? order.queueNumber : "Waiting..."}
+                </span>
+                <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                  {order.status}
+                </span>
               </div>
-            ))
+              <p className="order-info">Name: {order.name || "N/A"}</p>
+              <p className="order-info">Contact: {order.contact || "N/A"}</p>
+              <p className="order-info">Type: {order.deliveryType || "N/A"}</p>
+            </div>
+          ))
         ) : (
           <p className="text-center text-gray-600 text-lg">No orders found.</p>
         )}
