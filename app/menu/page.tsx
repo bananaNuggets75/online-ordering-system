@@ -5,10 +5,9 @@ import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 
 const menuData = [
-  { id: 1, name: "Burger", description: "Delicious beef burger", price: 120.99, image: "/burger.jpg" },
-  { id: 2, name: "Pizza", description: "Cheese pizza with fresh toppings", price: 350.00, image: "/pizza.jpg" },
-  { id: 3, name: "Fries", description: "Crispy golden fries", price: 79.99, image: "/fries.jpg" },
-  { id: 4, name: "Soda", description: "Refreshing soft drink", price: 25.00, image: "/coke.jpg" },
+  { "id": 1, "name": "Croffles", "description": "Flaky croissant waffles with a crispy edge. \n Mini - ₱55 | Regular - ₱90", "price": 55.00, "image": "/croffles.jpg" },
+  { "id": 2, "name": "Churro Donuts", "description": "Soft donuts coated in cinnamon sugar. \n 3 pcs - ₱35 | 5 pcs - ₱55", "price": 35.00, "image": "/churro-donut.jpg" },
+  { "id": 3, "name": "Popping Boba", "description": "Refreshing fruit-flavored boba pearls.", "price": 40.00, "image": "/popping-boba.jpg" },
 ];
 
 const MenuPage: React.FC = () => {

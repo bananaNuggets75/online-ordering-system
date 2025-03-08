@@ -5,10 +5,10 @@ import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 
 const menuData = [
-  { id: 1, name: "Burger", description: "Delicious beef burger", price: 5.99, image: "/burger.jpg" },
-  { id: 2, name: "Pizza", description: "Cheese pizza with fresh toppings", price: 8.99, image: "/pizza.jpg" },
-  { id: 3, name: "Fries", description: "Crispy golden fries", price: 2.99, image: "/fries.jpg" },
-  { id: 4, name: "Soda", description: "Refreshing soft drink", price: 1.99, image: "/soda.jpg" },
+  { "id": 1, "name": "Croffles", "description": "Flaky croissant waffles with a crispy edge.", "price": 120.99, "image": "/croffles.jpg" },
+  { "id": 2, "name": "Churro Donuts", "description": "Soft donuts coated in cinnamon sugar.", "price": 350.00, "image": "/churro-donut.jpg" },
+  { "id": 3, "name": "Popping Boba", "description": "Refreshing fruit-flavored boba pearls.", "price": 40.00, "image": "/popping-boba.jpg" },
+
 ];
 
 const MenuItemDetail: React.FC = () => {
