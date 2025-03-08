@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, onSnapshot } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 
 interface Order {
   id: string;
@@ -13,7 +13,6 @@ interface Order {
   queueNumber?: number | null;
 }
 
-const MAX_QUEUE_SIZE = 20;
 const LOCAL_STORAGE_KEY = "userOrders";
 
 const OrderStatusPage = () => {
@@ -29,19 +28,20 @@ const OrderStatusPage = () => {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "orders"));
+    const q = query(collection(db, "orders"), orderBy("queueNumber", "asc")); // Ensure sorted order
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const ordersData = snapshot.docs.map((doc) => ({
+      let ordersData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Order[];
 
-      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
-      const availableNumbers = Array.from({ length: MAX_QUEUE_SIZE }, (_, i) => i + 1);
+      // Remove completed orders
+      ordersData = ordersData.filter((order) => order.status !== "Completed");
 
-      const updatedOrders = activeOrders.map((order) => ({
+      // Reassign queue numbers dynamically
+      const updatedOrders = ordersData.map((order, index) => ({
         ...order,
-        queueNumber: availableNumbers.shift() ?? null,
+        queueNumber: index + 1, // Assign sequential queue numbers
       }));
 
       // Compare previous orders with new ones to detect status change
@@ -59,11 +59,11 @@ const OrderStatusPage = () => {
     });
 
     return () => unsubscribe();
-  }, [orders]);
+  }, []);
 
   // 🔊 Function to play notification sound
   const playNotificationSound = () => {
-    const audio = new Audio("/new-order.mp3"); // Place this file in `public/`
+    const audio = new Audio("/new-order.mp3");
     audio.play().catch((error) => console.error("Audio playback failed:", error));
   };
 

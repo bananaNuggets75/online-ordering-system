@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
@@ -41,40 +41,40 @@ const AdminDashboard = () => {
 }, [router]);
 
 useEffect(() => {
-    if (!user) return;
+  if (!user) return;
 
-    const ordersRef = collection(db, "orders");
-    const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
-      const updatedOrders = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          customerName: data.customerName || "N/A",
-          contact: data.contact || "N/A",
-          deliveryType: data.deliveryType || "N/A",
-          deliveryLocation: data.deliveryLocation || "N/A",
-          status: data.status || "Pending",
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
-        };
-      }) as Order[];
+  const ordersRef = query(collection(db, "orders"), orderBy("queueNumber", "asc"));
+  const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
+    const updatedOrders = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        customerName: data.customerName || "N/A",
+        contact: data.contact || "N/A",
+        deliveryType: data.deliveryType || "N/A",
+        deliveryLocation: data.deliveryLocation || "N/A",
+        status: data.status || "Pending",
+        queueNumber: data.queueNumber || null,
+        updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
+      };
+    }) as Order[];
 
-      // Play notification sound for new orders
-      if (orders.length < updatedOrders.length) {
-        playSound("/new-order.mp3");
-      }
+    // Play notification sound for new orders
+    if (orders.length < updatedOrders.length) {
+      playSound("/new-order.mp3");
+    }
 
-      setOrders(updatedOrders);
-      setLoading(false);
-    });
+    setOrders(updatedOrders);
+    setLoading(false);
+  });
 
-    return () => unsubscribe();
-}, [user]); // ✅ Fixed dependency array
+  return () => unsubscribe();
+}, [user, orders.length]);
 
 const playSound = (filePath: string) => {
-    const audio = new Audio(filePath);
-    audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
+  const audio = new Audio(filePath);
+  audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
 };
-
   
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
