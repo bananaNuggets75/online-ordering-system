@@ -18,6 +18,7 @@ interface Order {
   status: string;
   updatedAt?: string;
   queueNumber?: number;
+  totalPrice?: number; // ✅ Added missing field
 }
 
 const AdminDashboard = () => {
@@ -26,6 +27,8 @@ const AdminDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [previousOrderCount, setPreviousOrderCount] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   const router = useRouter();
 
@@ -42,44 +45,60 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, [router]);
 
-const fetchOrders = useCallback(() => {
-  const ordersRef = collection(db, "orders");
-  const ordersQuery = query(ordersRef, orderBy("queueNumber", "asc"), limit(ORDER_LIMIT));
+  const fetchOrders = useCallback(() => {
+    const ordersRef = collection(db, "orders");
+    const ordersQuery = query(ordersRef, orderBy("queueNumber", "asc"), limit(ORDER_LIMIT));
+  
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const updatedOrders = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        const items = data.items || []; // 🔹 Get items array from Firestore
+  
+        // ✅ Compute total price by multiplying each item's price and quantity
+        const totalPrice = items.reduce((sum: number, item: { price: number; quantity: number }) => {
+          return sum + (item.price * item.quantity);
+        }, 0);
+  
+        return {
+          id: doc.id,
+          customerName: data.customerInfo?.name || "N/A",
+          contact: data.customerInfo?.contact || "N/A",
+          deliveryType: data.customerInfo?.deliveryType || "N/A",
+          deliveryLocation: data.customerInfo?.deliveryLocation || "N/A",
+          status: data.status || "Pending",
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
+          queueNumber: data.queueNumber || "N/A",
+          totalPrice: totalPrice, // ✅ Store computed total price
+        };
+      });
 
-  const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-    const updatedOrders = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        customerName: data.customerInfo?.name || "N/A",
-        contact: data.customerInfo?.contact || "N/A",
-        deliveryType: data.customerInfo?.deliveryType || "N/A",
-        deliveryLocation: data.customerInfo?.deliveryLocation || "N/A",
-        status: data.status || "Pending",
-        updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
-        queueNumber: data.queueNumber || "N/A",
-      };
-    });
+      // 🔊 **Detect New Orders and Play Sound**
+      if (updatedOrders.length > previousOrderCount) {
+        console.log("New order detected! Playing notification sound...");
+        playNotificationSound();
+      }
+
+      // ✅ Compute total revenue
+      const computedTotalRevenue = updatedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
     setOrders(updatedOrders);
+    setTotalRevenue(computedTotalRevenue);
+    setPreviousOrderCount(updatedOrders.length);
     setLoading(false);
-  });
+    });
 
-  return unsubscribe;
-}, []); // ✅ Empty dependency array ensures it doesn’t recreate every render
+    return unsubscribe;
+  }, [previousOrderCount]);
 
-useEffect(() => {
-  if (!user) return;
-  fetchOrders();
-}, [user, fetchOrders]);  // ✅ No more warnings
+  useEffect(() => {
+    if (!user) return;
+    fetchOrders();
+  }, [user, fetchOrders]);
 
-
-  
-
-  /*const playSound = (filePath: string) => {
-    const audio = new Audio(filePath);
-    audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
-  };*/
+  const playNotificationSound = () => {
+    const audio = new Audio("/new-order.mp3");
+    audio.play().catch((error) => console.error("Audio playback failed:", error));
+  };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -123,7 +142,7 @@ useEffect(() => {
       }
 
       setSelectedOrders([]);
-      fetchOrders(); // Refresh orders to fill empty slots
+      fetchOrders();
     } catch (error) {
       console.error("Error archiving orders: ", error);
     }
@@ -134,6 +153,12 @@ useEffect(() => {
   return (
     <div className="admin-dashboard-container">
       <h1 className="admin-title">Admin Dashboard</h1>
+
+      {/* ✅ Total Revenue moved outside table */}
+      <div className="total-revenue text-xl font-bold text-gray-800 mt-4">
+        Total Revenue: <span className="text-green-600">₱{totalRevenue.toFixed(2)}</span>
+      </div>
+
       {loading ? (
         <p>Loading orders...</p>
       ) : (
@@ -150,6 +175,7 @@ useEffect(() => {
                 <th>Delivery Location</th>
                 <th>Status</th>
                 <th>Last Updated</th>
+                <th>Price</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -173,6 +199,7 @@ useEffect(() => {
                     {order.status}
                   </td>
                   <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
+                  <td>₱{(order.totalPrice ?? 0).toFixed(2)}</td>
                   <td>
                     <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
                       <option value="Pending">Pending</option>
@@ -187,6 +214,7 @@ useEffect(() => {
               ))}
             </tbody>
           </table>
+
           {selectedOrders.length > 0 && (
             <div className="flex justify-center mt-6 p-6">
               <button onClick={archiveSelectedOrders} className="archive-btn">
@@ -196,11 +224,12 @@ useEffect(() => {
           )}
         </div>
       )}
+
       <div className="footer">
         &copy; {new Date().getFullYear()} Admin Dashboard. All rights reserved.
       </div>
     </div>
-  );  
+  );
 };
 
 export default AdminDashboard;

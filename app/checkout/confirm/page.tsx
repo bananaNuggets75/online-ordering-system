@@ -46,7 +46,7 @@ export default function ConfirmPage() {
       });
     } catch (error) {
       console.error("Error updating order status:", error);
-      toast.error("Failed to update order status. Please try again.");
+      //toast.error("Failed to update order status. Please try again.");
     }
   };
 
@@ -129,7 +129,7 @@ export default function ConfirmPage() {
 
   const handlePaymentConfirmed = async () => {
     if (!orderId) return;
-    await assignQueueNumberAndConfirm(orderId, "Processing");
+    await assignQueueNumberAndConfirm(orderId, "Pending");
     setShowQR(false);
   };
 
@@ -172,7 +172,7 @@ export default function ConfirmPage() {
           <div className="qr-section">
             <h3 className="qr-title">Scan QR Code to Pay</h3>
             <div className="qr-container">
-              <Image src="/path/to/qr-code.jpg" alt="QR Code" width={200} height={200} className="qr-image" />
+              <Image src="/forms.png" alt="QR Code" width={200} height={200} className="qr-image" />
             </div>
             <p className="qr-instruction">After payment, click below:</p>
             <button 
