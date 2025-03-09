@@ -4,28 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, 
+  collection, 
+  serverTimestamp, 
+  getDocs, 
+  query, 
+  orderBy, 
+  limit  } from "firebase/firestore";
 import { toast } from "react-hot-toast";
-import { FieldValue } from "firebase/firestore";
-
-interface CustomerInfo {
-    name: string;
-    contact: string;
-}
-
-interface OrderItem {
-    id: number;
-    name: string;
-    quantity: number;
-    price: number;
-}
-
-interface Order {
-    items: OrderItem[];
-    customerInfo: CustomerInfo;
-    status: string;
-    timestamp: FieldValue;
-}
 
 export default function CartPage() {
     const { cart, removeFromCart, clearCart } = useCart();
@@ -42,32 +28,51 @@ export default function CartPage() {
     const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
     const placeOrder = async () => {
-        if (cart.length === 0) {
-            toast.error("Your cart is empty!");
-            return;
-        }
-
-        // Create an order object with types
-        const newOrder: Order = {
-            items: cart,
-            customerInfo: {
-                name: "John Doe", // Replace with actual user info
-                contact: "john.doe@example.com",
-            },
-            status: "Pending Payment",
-            timestamp: serverTimestamp(),
-        };
-
-        try {
-            const docRef = await addDoc(collection(db, "orders"), newOrder);
-            toast.success("Order Placed! Proceed to Payment");
-            clearCart();
-            router.push(`/checkout/confirm?orderId=${docRef.id}`); // Redirect to confirmation page
-        } catch (error) {
-            toast.error("Failed to place order");
-            console.error("Order error:", error);
-        }
-    };
+      if (cart.length === 0) {
+          toast.error("Your cart is empty!");
+          return;
+      }
+  
+      // 🛑 Load customer data from sessionStorage
+      const storedCustomerInfo = sessionStorage.getItem("customerInfo");
+      if (!storedCustomerInfo) {
+          toast.error("Please fill out the order form first.");
+          return;
+      }
+  
+      const { name, contact, deliveryType, location } = JSON.parse(storedCustomerInfo);
+  
+      try {
+          const q = query(collection(db, "orders"), orderBy("queueNumber", "desc"), limit(1));
+          const querySnapshot = await getDocs(q);
+          const lastQueueNumber = querySnapshot.docs[0]?.data().queueNumber || 0;
+          const nextQueueNumber = lastQueueNumber + 1;
+  
+          const docRef = await addDoc(collection(db, "orders"), {
+              items: cart,
+              customerInfo: { 
+                  name,  // ✅ Uses actual user input from sessionStorage
+                  contact,
+                  deliveryType,
+                  deliveryLocation: deliveryType === "Delivery" ? location : "",
+              },
+              status: "Pending Payment",
+              queueNumber: nextQueueNumber,
+              timestamp: serverTimestamp(),
+          });
+  
+          sessionStorage.setItem("orderId", docRef.id);
+          toast.success(`Order Placed! Your Queue Number: ${nextQueueNumber}`);
+          clearCart();
+          router.push(`/checkout/confirm?orderId=${docRef.id}`);
+      } catch (error) {
+          toast.error("Failed to place order");
+          console.error("Order error:", error);
+      }
+  };
+  
+  
+  
 
     return (
         <div className="cart-container">

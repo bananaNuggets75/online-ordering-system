@@ -790,23 +790,22 @@ select:hover {
 .order-id {
   font-size: 18px;
   font-weight: bold;
-  color: var(--text-color);
+  color: black
 }
 
 .order-info {
   font-size: 14px;
-  color: var(--text-color);
+  color: black;
   margin-top: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
   .order-info {
-    color: #ccc;
+    color: black;
   }
 }
 
 
-/* Status badge styling */
 /* Status Badge */
 .status-badge {
   display: inline-block;
@@ -902,14 +901,17 @@ select:hover {
   font-weight: 600;
 }
 
-/* Inputs & Select */
+/* Ensure inputs, select, and buttons have the same width */
 .form-input,
-.form-select {
+.form-select,
+.submit-button {
   width: 100%;
-  padding: 0.7rem;
+  display: block; /* Ensure full width */
+  padding: 0.7rem; /* Keep padding consistent */
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 1rem;
+  box-sizing: border-box; /* Prevents width issues */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -921,15 +923,14 @@ select:hover {
   }
 }
 
-/* Submit Button */
+
+
+/* Fix for button */
 .submit-button {
-  width: 100%;
-  padding: 0.8rem;
   background: #023047;
   color: white;
   font-weight: bold;
   border: none;
-  border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s ease;
 }
@@ -937,6 +938,7 @@ select:hover {
 .submit-button:hover {
   background: #035f81;
 }
+
 
 /* Cart Buttons */
 .clear-cart-btn, .checkout-btn {
@@ -1113,7 +1115,7 @@ th {
 
 /* Archive Button */
 .archive-btn {
-  background-color: #e65c00;
+  background-color: #FFBF00;
   color: white;
   padding: 10px 16px;
   border-radius: 6px;
@@ -1155,133 +1157,241 @@ th {
   display: none;
 }
 
-/* Confirmation Container */
+/* 🌟 Confirmation Container (Responsive) */
 .confirm-container {
+  background: var(--foreground);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+/* 📌 Confirmation Card */
+.confirm-card {
+  background: var(--background);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Title */
+.confirm-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+/* 📝 Message */
+.confirm-message {
+  color: var(--text-color);
+  margin-top: 0.5rem;
+}
+
+/* 🔢 Queue Number */
+.confirm-queue {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-top: 1rem;
+}
+
+/* 📌 Order ID */
+.confirm-order-id {
+  font-size: 0.9rem;
+  color: var(--border-color);
+  margin-top: 0.5rem;
+}
+
+/* ✅ Status Button */
+.confirm-status-btn {
+  width: 100%;
+  background: var(--primary);
+  color: black;  /* 🔹 Ensured black text */
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 1rem;
+  transition: background 0.3s;
+}
+
+.confirm-status-btn:hover {
+  background: var(--primary-dark);
+}
+
+.qr-confirm-btn {
+  width: 100%;
+  background: var(--primary);
+  color: black; 
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 1rem;
+  transition: background 0.3s;
+  border: none;
+}
+
+.qr-confirm-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* 💰 Payment Options */
+.payment-options {
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background-color: var(--background) !important;
-  padding: 20px;
-  text-align: center;
-  transition: background 0.3s ease-in-out;
-}
-
-
-/* Title */
-.confirm-container h1 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
-  .confirm-container h1 {
-    color: #facc15;
-  }
-}
-
-/* Description */
-.confirm-container p {
-  color: var(--text-color);
-  margin-top: 10px;
-}
-
-/* Payment Options */
-.payment-options {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
 }
 
-/* Payment Button */
-.pay-btn {
+/* 🔘 Payment Buttons */
+.payment-btn {
   width: 100%;
+  font-weight: bold;
   padding: 12px;
   border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  background-color: var(--button-bg);
-  color: var(--button-text);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease-in-out;
+  margin-top: 1rem;
+  transition: background 0.3s;
   text-align: center;
-  cursor: pointer; 
 }
 
-.pay-btn:hover {
-  transform: scale(1.02);
-  background-color: var(--border-color);
-  color: var(--foreground);
+/* ✅ GCash Button (Black Text for Better Contrast) */
+.gcash-btn {
+  background: var(--primary);
+  color: black; 
+  border: none;
 }
 
-/* GCash Button */
-.pay-btn.primary {
-  background-color: var(--primary);
-  color: black; /* Better contrast */
-}
-
-.pay-btn.primary:hover {
-  background-color: var(--primary-dark);
+.gcash-btn:hover {
+  background: var(--primary-dark);
   color: black;
 }
 
-/* Over-the-Counter Payment */
-.pay-btn.secondary {
-  background-color: var(--button-bg);
+/* 💳 Over-the-Counter Button */
+.cod-btn {
+  background: var(--button-bg);
   color: var(--button-text);
+  border: none;
 }
 
-.pay-btn.secondary:hover {
-  background-color: var(--border-color);
-  color: var(--foreground);
+.cod-btn:hover {
+  background: var(--border-color);
 }
 
-/* Ensure Cursor Pointer Applies */
-button, .pay-btn {
-  cursor: pointer !important;
-}
-
-/* Dark Mode Fix for Secondary Button */
-@media (prefers-color-scheme: dark) {
-  .pay-btn.secondary {
-    background-color: #222;
-    color: #ddd;
-  }
-
-  .pay-btn.secondary:hover {
-    background-color: #333;
-  }
-}
-
-/* QR Code Container */
-.qr-container {
-  margin-top: 20px;
+/* 📸 QR Code Section */
+.qr-section {
+  margin-top: 1.5rem;
   text-align: center;
 }
 
+.qr-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.qr-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.qr-image {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ✅ Toast Container (No White Borders) */
+.toast-container {
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+/* 🔘 Toast Actions */
+.toast-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ❌ Cancel Button */
+.toast-btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: background 0.3s, color 0.3s;
+  border: none;
+}
+
+/* ❌ Cancel Button */
+.toast-cancel {
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.toast-cancel:hover {
+  background: var(--border-color);
+}
+
+/* ✅ Confirm Button (Adaptive Light/Dark Mode) */
+.toast-confirm {
+  background: var(--primary);
+  color: black; /* ✅ Ensures Black Text for Readability */
+}
+
+.toast-confirm:hover {
+  background: var(--primary-dark);
+  color: black;
+}
+
+/* 🌙 Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+  .toast-confirm {
+    color: black;
+  }
+
+  .toast-confirm:hover {
+    background: var(--primary-dark);
+    color: black;
+  }
+
+  /* 📌 Fix for Extra White Glow */
+  .toast-container div:first-child {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ✅ Ensuring Responsiveness */
+@media (max-width: 600px) {
+  .confirm-card {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+
+  .confirm-title {
+    font-size: 1.8rem;
+  }
+
+  .payment-options {
+    max-width: 100%;
+  }
+}
+
+/* 📌 Fix for QR Code Background */
 .qr-container img {
-  border-radius: 10px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 200px;
   background: var(--foreground);
 }
 
-/* Dark Mode Fix for QR Code */
+/* 🖤 Dark Mode Fix */
 @media (prefers-color-scheme: dark) {
   .qr-container img {
     background: #222;
   }
 }
-
-.qr-container p {
-  margin-top: 10px;
-  font-size: 0.875rem;
-  color: var(--text-color);
-}
-
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 
 const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
+const ORDER_LIMIT = 20;
 
 interface Order {
   id: string;
@@ -16,6 +17,7 @@ interface Order {
   deliveryLocation?: string;
   status: string;
   updatedAt?: string;
+  queueNumber?: number;
 }
 
 const AdminDashboard = () => {
@@ -38,44 +40,46 @@ const AdminDashboard = () => {
     });
 
     return () => unsubscribe();
-}, [router]);
+  }, [router]);
 
-useEffect(() => {
-  if (!user) return;
+const fetchOrders = useCallback(() => {
+  const ordersRef = collection(db, "orders");
+  const ordersQuery = query(ordersRef, orderBy("queueNumber", "asc"), limit(ORDER_LIMIT));
 
-  const ordersRef = query(collection(db, "orders"), orderBy("queueNumber", "asc"));
-  const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
+  const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
     const updatedOrders = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
-        customerName: data.customerName || "N/A",
-        contact: data.contact || "N/A",
-        deliveryType: data.deliveryType || "N/A",
-        deliveryLocation: data.deliveryLocation || "N/A",
+        customerName: data.customerInfo?.name || "N/A",
+        contact: data.customerInfo?.contact || "N/A",
+        deliveryType: data.customerInfo?.deliveryType || "N/A",
+        deliveryLocation: data.customerInfo?.deliveryLocation || "N/A",
         status: data.status || "Pending",
-        queueNumber: data.queueNumber || null,
         updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
+        queueNumber: data.queueNumber || "N/A",
       };
-    }) as Order[];
-
-    // Play notification sound for new orders
-    if (orders.length < updatedOrders.length) {
-      playSound("/new-order.mp3");
-    }
+    });
 
     setOrders(updatedOrders);
     setLoading(false);
   });
 
-  return () => unsubscribe();
-}, [user, orders.length]);
+  return unsubscribe;
+}, []); // ✅ Empty dependency array ensures it doesn’t recreate every render
 
-const playSound = (filePath: string) => {
-  const audio = new Audio(filePath);
-  audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
-};
+useEffect(() => {
+  if (!user) return;
+  fetchOrders();
+}, [user, fetchOrders]);  // ✅ No more warnings
+
+
   
+
+  /*const playSound = (filePath: string) => {
+    const audio = new Audio(filePath);
+    audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
+  };*/
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -84,13 +88,6 @@ const playSound = (filePath: string) => {
         status: newStatus, 
         updatedAt: serverTimestamp(),
       });
-
-      const updatedOrders = orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus, updatedAt: new Date().toISOString() } : order
-      );
-
-      setOrders(updatedOrders);
-      localStorage.setItem("orders", JSON.stringify(updatedOrders));
 
       if (newStatus === "Order Received") {
         setTimeout(() => {
@@ -125,8 +122,8 @@ const playSound = (filePath: string) => {
         await deleteDoc(orderRef);
       }
 
-      setOrders((prevOrders) => prevOrders.filter((order) => !selectedOrders.includes(order.id)));
       setSelectedOrders([]);
+      fetchOrders(); // Refresh orders to fill empty slots
     } catch (error) {
       console.error("Error archiving orders: ", error);
     }
@@ -145,6 +142,7 @@ const playSound = (filePath: string) => {
             <thead>
               <tr>
                 <th>Select</th>
+                <th>Queue No.</th>
                 <th>Order ID</th>
                 <th>Customer</th>
                 <th>Contact</th>
@@ -165,6 +163,7 @@ const playSound = (filePath: string) => {
                       onChange={() => handleCheckboxChange(order.id)}
                     />
                   </td>
+                  <td>{order.queueNumber}</td>
                   <td>{order.id}</td>
                   <td>{order.customerName}</td>
                   <td>{order.contact}</td>

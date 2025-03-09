@@ -11,7 +11,7 @@ const OrderForm = () => {
     name: '',
     contact: '',
     deliveryType: 'Pickup',
-    location: ''
+    location: ''  
   });
 
   // Ensure localStorage is only accessed after component mounts
@@ -28,9 +28,9 @@ const OrderForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const orderId = Date.now().toString();
-  
+
     const newOrder = { 
       id: orderId, 
       customerName: formData.name,
@@ -42,18 +42,23 @@ const OrderForm = () => {
     };
 
     try {
-      await setDoc(doc(db, "orders", orderId), newOrder);
+        await setDoc(doc(db, "orders", orderId), newOrder);
 
-      if (typeof window !== 'undefined') {
-        const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-        localStorage.setItem('orders', JSON.stringify([...storedOrders, newOrder]));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('orders', JSON.stringify([...JSON.parse(localStorage.getItem('orders') || '[]'), newOrder]));
 
-        sessionStorage.setItem('userOrderId', orderId);
-      }
+            sessionStorage.setItem('userOrderId', orderId);
+            sessionStorage.setItem('customerInfo', JSON.stringify({
+                name: formData.name,
+                contact: formData.contact,
+                deliveryType: formData.deliveryType,
+                deliveryLocation: formData.location
+            }));
+        }
 
-      router.push('/menu');
+        router.push('/menu');
     } catch (error) {
-      console.error("Error placing order:", error);
+        console.error("Error placing order:", error);
     }
   };
 
@@ -63,7 +68,8 @@ const OrderForm = () => {
       <form onSubmit={handleSubmit} className="order-form">
         <div className="form-group">
           <label className="form-label">Name:</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} required className="form-input" />
+          <input type="text" name="name" value={formData.name} onChange={handleChange} required className="form-input"
+          placeholder="Enter your nickname"  />
         </div>
         
         <div className="form-group">

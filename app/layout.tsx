@@ -9,14 +9,14 @@ import { usePathname } from "next/navigation";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname(); 
 
-  // Hide sidebar on admin pages
-  const isAdminPage = pathname.startsWith("/admin/dashboard");
+  // Hide sidebar on admin pages and form pages
+  const isHiddenPage = pathname.startsWith("/admin/dashboard") || pathname.startsWith("/forms");
 
   return (
     <html lang="en">
       <body>
         <CartProvider>
-          {!isAdminPage && <Sidebar />} 
+          {!isHiddenPage && <Sidebar />} 
           {children}
           <Toaster 
             position="top-center"
