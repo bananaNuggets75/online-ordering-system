@@ -35,7 +35,7 @@ const OrderStatusPage = () => {
   
         return {
           id: doc.id,
-          name: data.customerInfo?.name || "N/A",    // ✅ Extract from `customerInfo`
+          name: data.customerInfo?.name || "N/A", 
           contact: data.customerInfo?.contact || "N/A",
           deliveryType: data.deliveryType || "N/A",
           status: data.status ?? "Pending",

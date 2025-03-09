@@ -17,7 +17,7 @@ interface Order {
   deliveryLocation?: string;
   status: string;
   updatedAt?: string;
-  queueNumber?: number;
+  queueNumber?: number; 
 }
 
 const AdminDashboard = () => {
@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [previousOrderCount, setPreviousOrderCount] = useState(0);
 
   const router = useRouter();
 
@@ -42,44 +43,49 @@ const AdminDashboard = () => {
     return () => unsubscribe();
   }, [router]);
 
-const fetchOrders = useCallback(() => {
-  const ordersRef = collection(db, "orders");
-  const ordersQuery = query(ordersRef, orderBy("queueNumber", "asc"), limit(ORDER_LIMIT));
-
-  const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
-    const updatedOrders = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        customerName: data.customerInfo?.name || "N/A",
-        contact: data.customerInfo?.contact || "N/A",
-        deliveryType: data.customerInfo?.deliveryType || "N/A",
-        deliveryLocation: data.customerInfo?.deliveryLocation || "N/A",
-        status: data.status || "Pending",
-        updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
-        queueNumber: data.queueNumber || "N/A",
-      };
-    });
-
-    setOrders(updatedOrders);
-    setLoading(false);
-  });
-
-  return unsubscribe;
-}, []); // ✅ Empty dependency array ensures it doesn’t recreate every render
-
-useEffect(() => {
-  if (!user) return;
-  fetchOrders();
-}, [user, fetchOrders]);  // ✅ No more warnings
-
-
+  const fetchOrders = useCallback(() => {
+    const ordersRef = collection(db, "orders");
+    const ordersQuery = query(ordersRef, orderBy("queueNumber", "asc"), limit(ORDER_LIMIT));
   
+    const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+      const updatedOrders = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          customerName: data.customerInfo?.name || "N/A",
+          contact: data.customerInfo?.contact || "N/A",
+          deliveryType: data.customerInfo?.deliveryType || "N/A",
+          deliveryLocation: data.customerInfo?.deliveryLocation || "N/A",
+          status: data.status || "Pending",
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
+          queueNumber: data.queueNumber || "N/A",
+        };
+      });
+  
+      // 🔊 **Detect New Orders and Play Sound**
+      if (updatedOrders.length > previousOrderCount) {
+        console.log("New order detected! Playing notification sound...");
+        playNotificationSound();
+      }
+  
+      setOrders(updatedOrders);
+      setPreviousOrderCount(updatedOrders.length);
+      setLoading(false);
+    });
+  
+    return unsubscribe;
+  }, [previousOrderCount]); 
+  // ✅ Ensures the function updates when Firestore changes
 
-  /*const playSound = (filePath: string) => {
-    const audio = new Audio(filePath);
-    audio.play().catch((err) => console.error("🔇 Audio play failed:", err));
-  };*/
+  useEffect(() => {
+    if (!user) return;
+    fetchOrders();
+  }, [user, fetchOrders]);  // ✅ Correct dependency usage
+
+  const playNotificationSound = () => {
+    const audio = new Audio("/new-order.mp3"); 
+    audio.play().catch((error) => console.error("Audio playback failed:", error));
+  };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
