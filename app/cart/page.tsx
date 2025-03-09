@@ -7,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-export default function CheckOutPage() {  // ✅ Renamed to CheckOutPage
+export default function CheckOutPage() {  
   const { cart, removeFromCart, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function CheckOutPage() {  // ✅ Renamed to CheckOutPage
       const orderRef = await addDoc(collection(db, "orders"), {
         items: cart,
         customerInfo: {
-          name,  // ✅ Uses actual user input from sessionStorage
+          name,  
           contact,
           deliveryType,
           deliveryLocation: deliveryType === "Delivery" ? deliveryLocation : "",

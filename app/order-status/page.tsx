@@ -37,7 +37,7 @@ const OrderStatusPage = () => {
           id: doc.id,
           name: data.customerInfo?.name || "N/A", 
           contact: data.customerInfo?.contact || "N/A",
-          deliveryType: data.deliveryType || "N/A",
+          deliveryType: data.customerInfo?.deliveryType || "N/A",
           status: data.status ?? "Pending",
           queueNumber: data.queueNumber ?? null,
         };

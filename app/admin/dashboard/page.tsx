@@ -17,7 +17,8 @@ interface Order {
   deliveryLocation?: string;
   status: string;
   updatedAt?: string;
-  queueNumber?: number; 
+  queueNumber?: number;
+  totalPrice?: number; // ✅ Added missing field
 }
 
 const AdminDashboard = () => {
@@ -27,6 +28,7 @@ const AdminDashboard = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [previousOrderCount, setPreviousOrderCount] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   const router = useRouter();
 
@@ -50,6 +52,13 @@ const AdminDashboard = () => {
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
       const updatedOrders = snapshot.docs.map((doc) => {
         const data = doc.data();
+        const items = data.items || []; // 🔹 Get items array from Firestore
+  
+        // ✅ Compute total price by multiplying each item's price and quantity
+        const totalPrice = items.reduce((sum: number, item: { price: number; quantity: number }) => {
+          return sum + (item.price * item.quantity);
+        }, 0);
+  
         return {
           id: doc.id,
           customerName: data.customerInfo?.name || "N/A",
@@ -59,31 +68,35 @@ const AdminDashboard = () => {
           status: data.status || "Pending",
           updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
           queueNumber: data.queueNumber || "N/A",
+          totalPrice: totalPrice, // ✅ Store computed total price
         };
       });
-  
+
       // 🔊 **Detect New Orders and Play Sound**
       if (updatedOrders.length > previousOrderCount) {
         console.log("New order detected! Playing notification sound...");
         playNotificationSound();
       }
-  
-      setOrders(updatedOrders);
-      setPreviousOrderCount(updatedOrders.length);
-      setLoading(false);
+
+      // ✅ Compute total revenue
+      const computedTotalRevenue = updatedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+
+    setOrders(updatedOrders);
+    setTotalRevenue(computedTotalRevenue);
+    setPreviousOrderCount(updatedOrders.length);
+    setLoading(false);
     });
-  
+
     return unsubscribe;
-  }, [previousOrderCount]); 
-  // ✅ Ensures the function updates when Firestore changes
+  }, [previousOrderCount]);
 
   useEffect(() => {
     if (!user) return;
     fetchOrders();
-  }, [user, fetchOrders]);  // ✅ Correct dependency usage
+  }, [user, fetchOrders]);
 
   const playNotificationSound = () => {
-    const audio = new Audio("/new-order.mp3"); 
+    const audio = new Audio("/new-order.mp3");
     audio.play().catch((error) => console.error("Audio playback failed:", error));
   };
 
@@ -129,7 +142,7 @@ const AdminDashboard = () => {
       }
 
       setSelectedOrders([]);
-      fetchOrders(); // Refresh orders to fill empty slots
+      fetchOrders();
     } catch (error) {
       console.error("Error archiving orders: ", error);
     }
@@ -140,6 +153,12 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard-container">
       <h1 className="admin-title">Admin Dashboard</h1>
+
+      {/* ✅ Total Revenue moved outside table */}
+      <div className="total-revenue text-xl font-bold text-gray-800 mt-4">
+        Total Revenue: <span className="text-green-600">₱{totalRevenue.toFixed(2)}</span>
+      </div>
+
       {loading ? (
         <p>Loading orders...</p>
       ) : (
@@ -156,6 +175,7 @@ const AdminDashboard = () => {
                 <th>Delivery Location</th>
                 <th>Status</th>
                 <th>Last Updated</th>
+                <th>Price</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -179,6 +199,7 @@ const AdminDashboard = () => {
                     {order.status}
                   </td>
                   <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
+                  <td>₱{(order.totalPrice ?? 0).toFixed(2)}</td>
                   <td>
                     <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
                       <option value="Pending">Pending</option>
@@ -193,6 +214,7 @@ const AdminDashboard = () => {
               ))}
             </tbody>
           </table>
+
           {selectedOrders.length > 0 && (
             <div className="flex justify-center mt-6 p-6">
               <button onClick={archiveSelectedOrders} className="archive-btn">
@@ -202,11 +224,12 @@ const AdminDashboard = () => {
           )}
         </div>
       )}
+
       <div className="footer">
         &copy; {new Date().getFullYear()} Admin Dashboard. All rights reserved.
       </div>
     </div>
-  );  
+  );
 };
 
 export default AdminDashboard;
