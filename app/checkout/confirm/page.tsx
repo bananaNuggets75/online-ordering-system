@@ -5,133 +5,167 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast"; 
 import Image from "next/image";
 import { db } from "@/lib/firebase";
-import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { runTransaction, doc, onSnapshot, updateDoc, serverTimestamp, collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 
 export default function ConfirmPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [/*orderStatus*/, /*setOrderStatus*/] = useState("pending");
-  const [showQR, setShowQR] = useState(false); // State for showing QR code
+  const [queueNumber, setQueueNumber] = useState<number | null>(null);
+  const [showQR, setShowQR] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const storedOrderId = sessionStorage.getItem("orderId");
     if (!storedOrderId) {
-      router.push("/cart"); // Redirect back if no order ID is found
+      router.push("/cart"); // Redirect if no order ID found
     } else {
       setOrderId(storedOrderId);
+      const unsubscribe = listenForQueueNumber(storedOrderId);
+      return () => unsubscribe();
     }
   }, [router]);
 
-  // Handle Payment Confirmation
-  const handlePaymentConfirm = () => {
-    toast.success("Order placed! Your payment will be verified.");
-    toast((t) => (
-      <div className="flex flex-col items-center">
-        <p>Go to Order Status</p>
-        <button 
-          className="bg-blue-500 text-white px-4 py-1 rounded mt-2"
-          onClick={() => {
-            router.push("/order-status"); 
-            toast.dismiss(t.id);
-          }}
-        >
-          View Order
-        </button>
-      </div>
-    ));
-
-    setShowQR(false); // Hide QR after confirmation
+  const listenForQueueNumber = (orderId: string) => {
+    const orderRef = doc(db, "orders", orderId);
+    return onSnapshot(orderRef, (docSnap) => {
+      if (docSnap.exists() && docSnap.data().queueNumber) {
+        setQueueNumber(docSnap.data().queueNumber);
+      }
+    }, (error) => {
+      console.error("Error listening for queue number:", error);
+    });
   };
 
-  // to do: 
-  // current implementation, right?
-  // place order -> payment (confirm page) if they haven't paid then the status in admin dashboard is "to be paid" 
-  // else we process the order 
-  // the admin will check it manually if the they recieve the payment then that is the time we will process the orders
-
-  // if ever the customer didn't pick up it will prompt delivery? but would this be necessary when we already have forms to specify the delivery
-  // also how can we prompt delivery when we do not know their location in the first place? stupid ahh thinking. i am not sure if i understand what my client wanted, but that is my approach
-
-
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string, queueNumber?: number) => {
     try {
       const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { 
-        status: newStatus, 
+      await updateDoc(orderRef, {
+        status: newStatus,
         updatedAt: serverTimestamp(),
+        ...(queueNumber && { queueNumber })
       });
-      console.log(`Order ${orderId} updated to ${newStatus}`);
     } catch (error) {
-      console.error("Error updating order status: ", error);
+      console.error("Error updating order status:", error);
+      toast.error("Failed to update order status. Please try again.");
     }
   };
 
-
-  const handlePaymentSelection = (paymentMethod: string) => {
+  const handlePaymentSelection = async (paymentMethod: string) => {
     if (!orderId) return;
 
-    const isConfirmed = window.confirm(`Are you sure you want to pay using ${paymentMethod}?`);
-    if (isConfirmed) {
-      const newStatus = paymentMethod === "gcash" ? "Awaiting Payment" : "To be Paid";
-      updateOrderStatus(orderId, newStatus);
+    if (paymentMethod === "gcash") {
+      setShowQR(true);
+      updateOrderStatus(orderId, "Awaiting Payment");
+      return;
+    }
 
-      toast.success(
-        paymentMethod === "gcash"
-          ? "Awaiting payment confirmation..."
-          : "Order placed successfully! Please pay upon delivery."
-      );
+    toast((t) => (
+        <div className="toast-container">
+          <p className="toast-message">
+            Are you sure you want to pay using <b>Over the Counter</b>?
+          </p>
+          <div className="toast-actions">
+            <button 
+              onClick={() => toast.dismiss(t.id)} 
+              className="toast-btn toast-cancel"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                await assignQueueNumberAndConfirm(orderId, "To be Paid");
+              }}
+              className="toast-btn toast-confirm"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      ), { duration: 5000 });      
+    }
+      
+
+  const assignQueueNumberAndConfirm = async (orderId: string, newStatus: string) => {
+    try {
+      const orderRef = doc(db, "orders", orderId);
+  
+      await runTransaction(db, async (transaction) => {
+        // Get the highest queue number
+        const q = query(collection(db, "orders"), orderBy("queueNumber", "desc"), limit(1));
+        const querySnapshot = await getDocs(q);
+        const highestQueueNumber = querySnapshot.docs[0]?.data().queueNumber || 0;
+        const nextQueueNumber = highestQueueNumber + 1;
+  
+        // Update the order with the queue number
+        transaction.update(orderRef, {
+          status: newStatus,
+          updatedAt: serverTimestamp(),
+          queueNumber: nextQueueNumber,
+        });
+  
+        setQueueNumber(nextQueueNumber);
+      });
+  
+      setPaymentConfirmed(true);
+      toast.success("Order placed successfully! Please pay upon delivery.");
+    } catch (error) {
+      console.error("Error assigning queue number:", error);
+      toast.error("Failed to assign queue number. Please try again.");
     }
   };
 
-
-
-
-  /*const handleCODPayment = () => {
-    // Simulate order status update
-    setOrderStatus("To be Paid");
-    toast.success("Order placed successfully! Please pay upon delivery.");
-  };*/
+  const handlePaymentConfirmed = async () => {
+    if (!orderId) return;
+    await assignQueueNumberAndConfirm(orderId, "Processing");
+    setShowQR(false);
+  };
 
   if (!orderId) return <p>Loading...</p>;
 
   return (
-    <div className="confirm-container flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
-        <h1 className="text-3xl font-bold text-gray-800">Order Confirmed</h1>
-        <p className="text-gray-600 mt-2">Your order has been placed successfully.</p>
-        <p className="text-lg font-semibold text-gray-700 mt-2">Order ID: {orderId}</p>
+    <div className="confirm-container flex flex-col items-center justify-center min-h-screen p-6">
+      <div className="confirm-card shadow-lg rounded-lg p-6 w-full max-w-md text-center">
+        <h1 className="confirm-title">Order Confirmed</h1>
+        <p className="confirm-message">Your order has been placed successfully.</p>
+        <p className="confirm-queue">Queue Number: {queueNumber ?? "Waiting..."}</p>
+        <p className="confirm-order-id">(Order ID: {orderId})</p>
   
-        <div className="payment-options mt-6">
-          <h2 className="text-xl font-bold text-gray-800">Select Payment Method</h2>
-  
-          {/* GCash Button */}
+        {paymentConfirmed ? (
           <button 
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg mt-4 transition"
-            onClick={() => setShowQR(true)}
+            className="confirm-status-btn"
+            onClick={() => router.push("/order-status")}
           >
-            Pay with GCash
+            View Order Status
           </button>
-  
-          {/* Cash on Delivery Button */}
-          <button 
-            onClick={() => handlePaymentSelection("cod")}
-            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded-lg mt-2 transition"
-          >
-            Over the Counter Payment
-          </button>
-        </div>
-  
-        {/* Show QR Code when GCash is selected */}
-        {showQR && (
-          <div className="mt-6">
-            <h3 className="text-lg font-bold text-gray-800">Scan QR Code to Pay</h3>
-            <div className="flex justify-center mt-4">
-              <Image src="/path/to/image.jpg" alt="QR Code" width={200} height={200} className="rounded-lg shadow-md" />
-            </div>
-            <p className="text-gray-600 mt-4">After payment, click below:</p>
+        ) : (
+          <div className="payment-options">
+            <h2 className="payment-title">Select Payment Method</h2>
             <button 
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg mt-4 transition"
-              onClick={handlePaymentConfirm}
+              className="payment-btn gcash-btn"
+              onClick={() => handlePaymentSelection("gcash")}
+            >
+              Pay with GCash
+            </button>
+            <button 
+              onClick={() => handlePaymentSelection("cod")} 
+              className="payment-btn cod-btn"
+            >
+              Over the Counter Payment
+            </button>
+          </div>
+        )}
+  
+        {showQR && (
+          <div className="qr-section">
+            <h3 className="qr-title">Scan QR Code to Pay</h3>
+            <div className="qr-container">
+              <Image src="/path/to/qr-code.jpg" alt="QR Code" width={200} height={200} className="qr-image" />
+            </div>
+            <p className="qr-instruction">After payment, click below:</p>
+            <button 
+              className="qr-confirm-btn"
+              onClick={handlePaymentConfirmed}
             >
               I Have Paid
             </button>
@@ -140,4 +174,4 @@ export default function ConfirmPage() {
       </div>
     </div>
   );
-}  
+}

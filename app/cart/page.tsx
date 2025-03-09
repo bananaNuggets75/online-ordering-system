@@ -7,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-export default function CartPage() {
+export default function CheckOutPage() {  // ✅ Renamed to CheckOutPage
   const { cart, removeFromCart, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -28,12 +28,23 @@ export default function CartPage() {
       return;
     }
 
+    // 🛑 Retrieve customer info from sessionStorage
+    const storedCustomerInfo = sessionStorage.getItem("customerInfo");
+    if (!storedCustomerInfo) {
+      toast.error("Please fill out the order form first.");
+      return;
+    }
+
+    const { name, contact, deliveryType, deliveryLocation } = JSON.parse(storedCustomerInfo);
+
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
         items: cart,
         customerInfo: {
-          name: "John Doe",
-          contact: "034805435",
+          name,  // ✅ Uses actual user input from sessionStorage
+          contact,
+          deliveryType,
+          deliveryLocation: deliveryType === "Delivery" ? deliveryLocation : "",
         },
         status: "Received",
         timestamp: serverTimestamp(),

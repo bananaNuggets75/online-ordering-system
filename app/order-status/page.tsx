@@ -28,40 +28,53 @@ const OrderStatusPage = () => {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "orders"), orderBy("queueNumber", "asc")); // Ensure sorted order
+    const q = query(collection(db, "orders"), orderBy("queueNumber", "asc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      let ordersData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Order[];
-
-      // Remove completed orders
-      ordersData = ordersData.filter((order) => order.status !== "Completed");
-
-      // Reassign queue numbers dynamically
-      const updatedOrders = ordersData.map((order, index) => ({
+      const ordersData = snapshot.docs.map((doc) => {
+        const data = doc.data();
+  
+        return {
+          id: doc.id,
+          name: data.customerInfo?.name || "N/A",    // ✅ Extract from `customerInfo`
+          contact: data.customerInfo?.contact || "N/A",
+          deliveryType: data.deliveryType || "N/A",
+          status: data.status ?? "Pending",
+          queueNumber: data.queueNumber ?? null,
+        };
+      }) as Order[];
+  
+      // ✅ Filter out completed orders, but DO NOT change queue numbers
+      const activeOrders = ordersData.filter((order) => order.status !== "Completed");
+  
+      // ✅ Use Firestore queue numbers directly
+      const updatedOrders = activeOrders.map((order) => ({
         ...order,
-        queueNumber: index + 1, // Assign sequential queue numbers
+        status: order.status ?? "Pending",
+        queueNumber: order.queueNumber ?? null,
       }));
-
-      // Compare previous orders with new ones to detect status change
-      orders.forEach((prevOrder) => {
-        const newOrder = updatedOrders.find((o) => o.id === prevOrder.id);
-        if (newOrder && newOrder.status !== prevOrder.status) {
-          if (["Ready for Pickup", "Out for Delivery"].includes(newOrder.status)) {
-            playNotificationSound();
+  
+      // ✅ Compare previous orders with new ones to detect status change
+      setOrders((prevOrders) => {
+        prevOrders.forEach((prevOrder) => {
+          const newOrder = updatedOrders.find((o) => o.id === prevOrder.id);
+          if (newOrder && newOrder.status !== prevOrder.status) {
+            if (["Ready for Pickup", "Out for Delivery"].includes(newOrder.status)) {
+              playNotificationSound();
+            }
           }
-        }
+        });
+        return updatedOrders;
       });
-
-      setOrders(updatedOrders);
+  
+      setOrders(updatedOrders);  // ✅ Fix: Only use `updatedOrders`
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
     });
-
+  
     return () => unsubscribe();
   }, []);
+  
 
-  // 🔊 Function to play notification sound
+  // 🔊 Function to play notification sound when order status updates
   const playNotificationSound = () => {
     const audio = new Audio("/new-order.mp3");
     audio.play().catch((error) => console.error("Audio playback failed:", error));
@@ -79,9 +92,9 @@ const OrderStatusPage = () => {
             <div key={order.id} className="order-card">
               <div className="order-header">
                 <span className="order-id font-semibold">
-                  Order #{order.queueNumber ? order.queueNumber : "Waiting..."}
+                  Order #{order.queueNumber}
                 </span>
-                <span className={`status-${order.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                <span className={`status-${order.status ? order.status.toLowerCase().replace(/\s+/g, "-") : "unknown"}`}>
                   {order.status}
                 </span>
               </div>
