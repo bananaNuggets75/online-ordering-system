@@ -18,7 +18,8 @@ interface Order {
   status: string;
   updatedAt?: string;
   queueNumber?: number;
-  totalPrice?: number; // ✅ Added missing field
+  totalPrice?: number; 
+  items: { name: string; quantity: number; price: number }[];
 }
 
 const AdminDashboard = () => {
@@ -68,7 +69,8 @@ const AdminDashboard = () => {
           status: data.status || "Pending",
           updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : "N/A",
           queueNumber: data.queueNumber || "N/A",
-          totalPrice: totalPrice, // ✅ Store computed total price
+          totalPrice: totalPrice, 
+          items: data.items || [],
         };
       });
 
@@ -153,12 +155,12 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard-container">
       <h1 className="admin-title">Admin Dashboard</h1>
-
+  
       {/* ✅ Total Revenue moved outside table */}
       <div className="total-revenue text-xl font-bold text-gray-800 mt-4">
         Total Revenue: <span className="text-green-600">₱{totalRevenue.toFixed(2)}</span>
       </div>
-
+  
       {loading ? (
         <p>Loading orders...</p>
       ) : (
@@ -173,9 +175,10 @@ const AdminDashboard = () => {
                 <th>Contact</th>
                 <th>Delivery Type</th>
                 <th>Delivery Location</th>
+                <th>Items & Quantity</th> {/* ✅ Fixed column for items */}
+                <th>Total Price</th> {/* ✅ Price before status */}
                 <th>Status</th>
                 <th>Last Updated</th>
-                <th>Price</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -195,11 +198,24 @@ const AdminDashboard = () => {
                   <td>{order.contact}</td>
                   <td>{order.deliveryType}</td>
                   <td>{order.deliveryLocation || "N/A"}</td>
+                  <td>
+                    {order.items.length > 0 ? (
+                      <ul>
+                        {order.items.map((item, index) => (
+                          <li key={index}>
+                            {item.name} - {item.quantity}x
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "No items"
+                    )}
+                  </td>
+                  <td>₱{(order.totalPrice ?? 0).toFixed(2)}</td> {/* ✅ Moved before status */}
                   <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
                     {order.status}
                   </td>
                   <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
-                  <td>₱{(order.totalPrice ?? 0).toFixed(2)}</td>
                   <td>
                     <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
                       <option value="Pending">Pending</option>
@@ -214,7 +230,7 @@ const AdminDashboard = () => {
               ))}
             </tbody>
           </table>
-
+  
           {selectedOrders.length > 0 && (
             <div className="flex justify-center mt-6 p-6">
               <button onClick={archiveSelectedOrders} className="archive-btn">
@@ -224,12 +240,12 @@ const AdminDashboard = () => {
           )}
         </div>
       )}
-
+  
       <div className="footer">
         &copy; {new Date().getFullYear()} Admin Dashboard. All rights reserved.
       </div>
     </div>
-  );
+  );  
 };
 
 export default AdminDashboard;
