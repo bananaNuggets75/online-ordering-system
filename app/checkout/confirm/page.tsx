@@ -86,34 +86,46 @@ export default function ConfirmPage() {
     }
       
 
-  const assignQueueNumberAndConfirm = async (orderId: string, newStatus: string) => {
-    try {
-      const orderRef = doc(db, "orders", orderId);
-  
-      await runTransaction(db, async (transaction) => {
-        // Get the highest queue number
-        const q = query(collection(db, "orders"), orderBy("queueNumber", "desc"), limit(1));
-        const querySnapshot = await getDocs(q);
-        const highestQueueNumber = querySnapshot.docs[0]?.data().queueNumber || 0;
-        const nextQueueNumber = highestQueueNumber + 1;
-  
-        // Update the order with the queue number
-        transaction.update(orderRef, {
-          status: newStatus,
-          updatedAt: serverTimestamp(),
-          queueNumber: nextQueueNumber,
-        });
-  
-        setQueueNumber(nextQueueNumber);
-      });
-  
-      setPaymentConfirmed(true);
-      toast.success("Order placed successfully! Please pay upon delivery.");
-    } catch (error) {
-      console.error("Error assigning queue number:", error);
-      toast.error("Failed to assign queue number. Please try again.");
-    }
-  };
+    const assignQueueNumberAndConfirm = async (orderId: string, newStatus: string) => {
+        try {
+          const orderRef = doc(db, "orders", orderId);
+      
+          await runTransaction(db, async (transaction) => {
+            const orderSnap = await transaction.get(orderRef);
+            if (!orderSnap.exists()) throw new Error("Order not found.");
+      
+            const existingQueueNumber = orderSnap.data().queueNumber;
+            if (existingQueueNumber) {
+              setQueueNumber(existingQueueNumber);
+              return; // Skip if already assigned
+            }
+      
+            // Get the highest queue number
+            const q = query(collection(db, "orders"), orderBy("queueNumber", "desc"), limit(1));
+            const querySnapshot = await getDocs(q);
+            const highestQueueNumber = querySnapshot.docs[0]?.data().queueNumber || 0;
+            const nextQueueNumber = highestQueueNumber + 1;
+      
+            // Update the order with the queue number
+            transaction.update(orderRef, {
+              status: newStatus,
+              updatedAt: serverTimestamp(),
+              queueNumber: nextQueueNumber,
+            });
+      
+            setQueueNumber(nextQueueNumber);
+          });
+      
+          setPaymentConfirmed(true);
+          toast.success("Order placed successfully!");
+        } catch (error) {
+          console.error("Error assigning queue number:", error);
+          toast.error("Failed to assign queue number.");
+
+          setTimeout(() => assignQueueNumberAndConfirm(orderId, newStatus), 2000);
+        }
+      };
+      
 
   const handlePaymentConfirmed = async () => {
     if (!orderId) return;

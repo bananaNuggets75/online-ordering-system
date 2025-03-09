@@ -923,8 +923,6 @@ select:hover {
   }
 }
 
-
-
 /* Fix for button */
 .submit-button {
   background: #023047;
@@ -933,6 +931,7 @@ select:hover {
   border: none;
   cursor: pointer;
   transition: background 0.3s ease;
+  border-radius: 50px 50px 50px 50px;
 }
 
 .submit-button:hover {
