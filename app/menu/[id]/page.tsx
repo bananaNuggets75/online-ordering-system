@@ -18,6 +18,7 @@ const menuData = [
     id: 1,
     name: "Croffles",
     description: "Flaky croissant waffles with a crispy edge.",
+    isAvailable: true,
     options: [
       { size: "Mini", price: 55 },
       { size: "Regular", price: 90 },
@@ -28,6 +29,7 @@ const menuData = [
     id: 2,
     name: "Churro Donuts",
     description: "Soft donuts coated in cinnamon sugar.",
+    isAvailable: true,
     options: [
       { size: "3 pcs", price: 35 },
       { size: "5 pcs", price: 55 },
@@ -38,7 +40,8 @@ const menuData = [
     id: 3,
     name: "Popping Boba",
     description: "Refreshing fruit-flavored boba pearls.",
-    price: 40.0, // ✅ No options
+    isAvailable: true,
+    price: 40.0,
     image: "/popping-boba.jpg",
   },
 ];

@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { db, auth } from "@/lib/firebase";
-import { collection, updateDoc, doc, setDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "firebase/firestore";
+import { collection, updateDoc, doc, setDoc, deleteDoc, getDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
+import toast from "react-hot-toast";
 
 const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 const ORDER_LIMIT = 20;
@@ -19,8 +20,16 @@ interface Order {
   updatedAt?: string;
   queueNumber?: number;
   totalPrice?: number; 
-  items: { name: string; quantity: number; price: number }[];
+  items: { 
+    name: string; 
+    quantity: number; 
+    price: number; 
+    size?: string; 
+    stock?: number;
+    isOutOfStock?: boolean;
+  }[];
 }
+
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -121,6 +130,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const toggleOutOfStock = async (orderId: string, itemName: string, isOutOfStock: boolean) => {
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      const orderSnapshot = await getDoc(orderRef);
+  
+      if (orderSnapshot.exists()) {
+        const updatedItems = orderSnapshot.data().items.map((item: { name: string; isOutOfStock?: boolean }) =>
+          item.name === itemName ? { ...item, isOutOfStock } : item
+        );
+  
+        await updateDoc(orderRef, { items: updatedItems });
+        toast.success("Stock status updated!");
+        fetchOrders(); // ✅ Refresh orders
+      }
+    } catch (error) {
+      console.error("Error updating stock status:", error);
+      toast.error("Failed to update stock status.");
+    }
+  };
+  
+  
+  
+  
+
   const handleCheckboxChange = (orderId: string) => {
     setSelectedOrders((prev) =>
       prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
@@ -170,65 +203,77 @@ const AdminDashboard = () => {
               <tr>
                 <th>Select</th>
                 <th>Queue No.</th>
-                <th>Order ID</th>
                 <th>Customer</th>
                 <th>Contact</th>
                 <th>Delivery Type</th>
                 <th>Delivery Location</th>
-                <th>Items & Quantity</th> {/* ✅ Fixed column for items */}
-                <th>Total Price</th> {/* ✅ Price before status */}
+                <th>Items & Quantity</th>
+                <th>Stock</th> 
+                <th>Total Price</th> 
                 <th>Status</th>
                 <th>Last Updated</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedOrders.includes(order.id)}
-                      onChange={() => handleCheckboxChange(order.id)}
-                    />
-                  </td>
-                  <td>{order.queueNumber}</td>
-                  <td>{order.id}</td>
-                  <td>{order.customerName}</td>
-                  <td>{order.contact}</td>
-                  <td>{order.deliveryType}</td>
-                  <td>{order.deliveryLocation || "N/A"}</td>
-                  <td>
-                    {order.items.length > 0 ? (
-                      <ul>
-                        {order.items.map((item, index) => (
-                          <li key={index}>
-                            {item.name} - {item.quantity}x
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      "No items"
-                    )}
-                  </td>
-                  <td>₱{(order.totalPrice ?? 0).toFixed(2)}</td> {/* ✅ Moved before status */}
-                  <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
-                    {order.status}
-                  </td>
-                  <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
-                  <td>
-                    <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
-                      <option value="Pending">Pending</option>
-                      <option value="To be Paid">To be Paid</option> 
-                      <option value="In-Process">In-Process</option>
-                      <option value="Out for Delivery">Out for Delivery</option>
-                      <option value="Paid (Completed)">Paid (Completed)</option>
-                      <option value="Order Received">Order Received</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {orders.map((order) => (
+    <tr key={order.id}>
+      <td>
+        <input
+          type="checkbox"
+          checked={selectedOrders.includes(order.id)}
+          onChange={() => handleCheckboxChange(order.id)}
+        />
+      </td>
+      <td>{order.queueNumber}</td>
+      <td>{order.customerName}</td>
+      <td>{order.contact}</td>
+      <td>{order.deliveryType}</td>
+      <td>{order.deliveryLocation || "N/A"}</td>
+      <td>
+        {order.items.length > 0 ? (
+          <ul>
+            {order.items.map((item, index) => (
+              <li key={index}>
+                {item.name} {item.size ? `(${item.size})` : ""} - {item.quantity}x
+              </li>
+            ))}
+          </ul>
+        ) : (
+          "No items"
+        )}
+      </td>
+      <td>
+        {order.items.map((item, index) => (
+          <div key={index}>
+            <button
+              className={`stock-toggle-btn ${item.isOutOfStock ? "out-of-stock" : ""}`}
+              onClick={() => toggleOutOfStock(order.id, item.name, !item.isOutOfStock)}
+            >
+              {item.isOutOfStock ? "Out of Stock" : "In Stock"}
+            </button>
+          </div>
+        ))}
+      </td>
+      <td>₱{(order.totalPrice ?? 0).toFixed(2)}</td>
+      <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
+        {order.status}
+      </td>
+      <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
+      <td>
+        <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
+          <option value="Pending">Pending</option>
+          <option value="To be Paid">To be Paid</option> 
+          <option value="In-Process">In-Process</option>
+          <option value="Out for Delivery">Out for Delivery</option>
+          <option value="Paid (Completed)">Paid (Completed)</option>
+          <option value="Order Received">Order Received</option>
+        </select>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
   
           {selectedOrders.length > 0 && (
