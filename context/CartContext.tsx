@@ -7,8 +7,10 @@ import toast from "react-hot-toast";
 type CartItem = {
   id: number;
   name: string;
+  size?: string;
   price: number;
   quantity: number;
+  image?: string;
 };
 
 // Define the shape of the context

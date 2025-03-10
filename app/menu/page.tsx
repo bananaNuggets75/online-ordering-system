@@ -5,63 +5,144 @@ import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 
 const menuData = [
-  { "id": 1, "name": "Croffles", "description": "Flaky croissant waffles with a crispy edge. \n Mini - ₱55 | Regular - ₱90", "price": 55.00, "image": "/croffles.jpg" },
-  { "id": 2, "name": "Churro Donuts", "description": "Soft donuts coated in cinnamon sugar. \n 3 pcs - ₱35 | 5 pcs - ₱55", "price": 35.00, "image": "/churro-donut.jpg" },
-  { "id": 3, "name": "Popping Boba", "description": "Refreshing fruit-flavored boba pearls.", "price": 40.00, "image": "/popping-boba.jpg" },
+  {
+    id: 1,
+    name: "Croffles",
+    description: "Flaky croissant waffles with a crispy edge.",
+    image: "/croffles.jpg",
+    options: [
+      { size: "Mini", price: 55 },
+      { size: "Regular", price: 90 },
+    ],
+  },
+  {
+    id: 2,
+    name: "Churro Donuts",
+    description: "Soft donuts coated in cinnamon sugar.",
+    image: "/churro-donut.jpg",
+    options: [
+      { size: "3 pcs", price: 35 },
+      { size: "5 pcs", price: 55 },
+    ],
+  },
+  {
+    id: 3,
+    name: "Popping Boba",
+    description: "Refreshing fruit-flavored boba pearls.",
+    price: 40,
+    image: "/popping-boba.jpg",
+  },
 ];
 
 const MenuPage: React.FC = () => {
   const { addToCart } = useCart();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState(""); // For search
+  const [selectedItem, setSelectedItem] = useState<(typeof menuData)[0] | null>(null);
+  const [selectedOption, setSelectedOption] = useState<{ size: string; price: number } | null>(null);
 
-  const filteredMenuData = menuData.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleAddToCart = () => {
+    if (!selectedItem) return;
+
+    addToCart({
+      id: selectedItem.id,
+      name: selectedItem.name,
+      size: selectedOption?.size ?? "", // ✅ Ensure size is not undefined
+      price: selectedOption?.price ?? selectedItem.price ?? 0, // ✅ Use default price if no option
+      quantity: 1,
+      image: selectedItem.image ?? "",
+    });
+
+    setSelectedItem(null); // Close modal
+    setSelectedOption(null); // Reset option selection
+  };
 
   return (
     <div className="menu-container">
-      <div className="search-bar"> {/* Search bar */}
-        <input
-          type="text"
-          placeholder="Find nearby food"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      <h1 className="text-center text-3xl font-bold mb-4">Menu</h1>
+
       <div className="menu-list">
-        {filteredMenuData.map((item) => (
-          <div
-            key={item.id}
-            className="menu-item"
-            onClick={() => router.push(`/menu/${item.id}`)}
-          >
-            <Image src={item.image} alt={item.name} className="menu-item-image" width={300} height={200} priority />
-            <div className="menu-item-content">
-              <div className="menu-item-title-price"> {/* Title and price side by side */}
+        {menuData.map((item) => (
+          <div key={item.id} className="menu-item">
+            {/* ✅ Clicking anywhere navigates to menu details */}
+            <div onClick={() => router.push(`/menu/${item.id}`)} className="cursor-pointer">
+              <Image
+                src={item.image}
+                alt={item.name}
+                className="menu-item-image"
+                width={300}
+                height={200}
+                priority
+              />
+              <div className="menu-item-content">
                 <h3>{item.name}</h3>
-                <p className="menu-price">₱{item.price.toFixed(2)}</p>
-              </div>
-              <p className="menu-item-description">{item.description}</p>
-              <div className="menu-item-actions"> {/* Add to cart and rating */}
-                <button
-                  className="add-to-cart"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart({ ...item, quantity: 1 });
-                  }}
-                >
-                  Add
-                </button>
-                {/* Add rating display here (e.g., using a star rating component) */}
-                <div className="rating"> {/* Placeholder for rating */}
-                  ★★★★☆
-                </div>
+                <p className="menu-item-description">{item.description}</p>
               </div>
             </div>
+
+            {/* ✅ "Add" button opens the modal */}
+            <button
+              className="add-to-cart"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevents navigation when clicking "Add"
+                setSelectedItem(item);
+                setSelectedOption(null); // Reset selected option when opening modal
+              }}
+            >
+              Add
+            </button>
           </div>
         ))}
       </div>
+
+      {/* ✅ Modal for Selecting Options */}
+      {selectedItem && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2 className="text-xl font-bold mb-4">{selectedItem.name}</h2>
+            <p className="text-gray-600 mb-2">{selectedItem.description}</p>
+
+            {/* ✅ Show options as selectable cards */}
+            {selectedItem.options && selectedItem.options.length > 0 ? (
+              <div className="options-grid">
+                {selectedItem.options.map((option, index) => (
+                  <button
+                    key={index}
+                    className={`option-card ${selectedOption === option ? "selected" : ""}`}
+                    onClick={() => setSelectedOption(option)} // ✅ Select option on click
+                  >
+                    <Image src={selectedItem.image} alt={option.size} width={100} height={80} />
+                    <p>{option.size}</p>
+                    <p className="text-green-600 font-bold">₱{option.price}</p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              // ✅ No options (e.g., Popping Boba)
+              <button
+                className="option-card"
+                onClick={handleAddToCart}
+              >
+                <Image src={selectedItem.image} alt={selectedItem.name} width={100} height={100} />
+                <p>₱{selectedItem.price}</p>
+              </button>
+            )}
+
+            {/* ✅ "Confirm" button to add item to cart */}
+            <button 
+              onClick={handleAddToCart} 
+              className="confirm-btn"
+              disabled={selectedItem.options && !selectedOption} // ✅ Disable if no option selected
+            >
+              Confirm
+            </button>
+
+            {/* ✅ Cancel Button */}
+            <button className="cancel-btn" onClick={() => setSelectedItem(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
