@@ -12,23 +12,17 @@ export default function CheckOutPage() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => setMounted(true), []);
   if (!mounted) return null; // Prevent hydration mismatch
 
-  // Calculate total price
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // Handle order placement
   const placeOrder = async () => {
     if (cart.length === 0) {
       toast.error("Your cart is empty!");
       return;
     }
 
-    // 🛑 Retrieve customer info from sessionStorage
     const storedCustomerInfo = sessionStorage.getItem("customerInfo");
     if (!storedCustomerInfo) {
       toast.error("Please fill out the order form first.");
@@ -50,12 +44,9 @@ export default function CheckOutPage() {
         timestamp: serverTimestamp(),
       });
 
-      const orderId = orderRef.id; // Get the order ID
-      sessionStorage.setItem("orderId", orderId); // Store it temporarily
-      clearCart(); // Clear cart after successful order
+      sessionStorage.setItem("orderId", orderRef.id);
+      clearCart();
       toast.success("Order Placed!");
-
-      // Redirect to the confirmation page
       router.push("/checkout/confirm");
     } catch (error) {
       toast.error("Failed to place order");
@@ -79,21 +70,20 @@ export default function CheckOutPage() {
       ) : (
         <div className="cart-list">
           {cart.map((item) => (
-            <div key={item.id} className="cart-item">
+            <div key={`${item.id}-${item.size}`} className="cart-item">
               <div>
-                <h2>{item.name}</h2>
+                <h2>{item.name} {item.size ? `(${item.size})` : ""}</h2> 
                 <p>₱{item.price.toFixed(2)} x {item.quantity}</p>
               </div>
               <button 
                 className="remove-btn"
-                onClick={() => removeFromCart(item.id)}
+                onClick={() => removeFromCart(item.id, item.size)} 
               >
                 Remove
               </button>
             </div>
           ))}
-  
-          {/* Total Price & Actions */}
+
           <div className="mt-4">
             <p className="text-xl font-bold">Total: ₱{totalPrice.toFixed(2)}</p>
             <div className="flex gap-2 mt-2">
