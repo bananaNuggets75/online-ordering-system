@@ -299,6 +299,12 @@ body {
   color: var(--price-color, #16a34a); /* Adaptive green */
 }
 
+.option-card.selected {
+  background: #ff9800; /* Light yellow to highlight selection */
+  border: 2px solid #ff9800; /* Orange border to show it's selected */
+  transform: scale(1.05); /* Slight floating effect */
+}
+
 /* Cancel button */
 .cancel-btn {
   background: #d9534f;

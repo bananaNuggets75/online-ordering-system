@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { toast } from "react-hot-toast"; 
 import Image from "next/image";
 
 const menuData = [
@@ -42,19 +43,24 @@ const MenuPage: React.FC = () => {
 
   const handleAddToCart = () => {
     if (!selectedItem) return;
-
+    if (selectedItem.options && !selectedOption) {
+      toast.error("Please select an option before adding to cart.");
+      return;
+    }
+  
     addToCart({
       id: selectedItem.id,
       name: selectedItem.name,
-      size: selectedOption?.size ?? "", // ✅ Ensure size is not undefined
-      price: selectedOption?.price ?? selectedItem.price ?? 0, // ✅ Use default price if no option
+      size: selectedOption?.size ?? "One Size",
+      price: selectedOption?.price ?? selectedItem.price ?? 0,
       quantity: 1,
-      image: selectedItem.image ?? "",
+      image: selectedItem.image,
     });
-
-    setSelectedItem(null); // Close modal
-    setSelectedOption(null); // Reset option selection
+  
+    setSelectedItem(null);
+    setSelectedOption(null);
   };
+  
 
   return (
     <div className="menu-container">
@@ -107,9 +113,9 @@ const MenuPage: React.FC = () => {
                 {selectedItem.options.map((option, index) => (
                   <button
                     key={index}
-                    className={`option-card ${selectedOption === option ? "selected" : ""}`}
-                    onClick={() => setSelectedOption(option)} // ✅ Select option on click
-                  >
+                    className={`option-card ${selectedOption?.size === option.size ? "selected" : ""}`}
+                    onClick={() => setSelectedOption(option)}
+                  >                
                     <Image src={selectedItem.image} alt={option.size} width={100} height={80} />
                     <p>{option.size}</p>
                     <p className="text-green-600 font-bold">₱{option.price}</p>
