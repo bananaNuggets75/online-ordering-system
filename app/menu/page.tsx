@@ -151,7 +151,7 @@ const MenuPage: React.FC = () => {
                 <p>₱{selectedItem.price}</p>
               </button>
             )}
-
+            <div className="modal-buttons">
             {/* "Confirm" button to add item to cart */}
             <button
               onClick={handleAddToCart}
@@ -166,6 +166,7 @@ const MenuPage: React.FC = () => {
               Cancel
             </button>
           </div>
+        </div>
         </div>
       )}
     </div>

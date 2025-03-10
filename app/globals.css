@@ -246,21 +246,24 @@ body {
   border-radius: 10px;
   text-align: center;
   width: 95%;
-  max-width: 450px;
+  max-width: 420px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  margin: 0 10px;
 }
 
-/* Grid layout for options */
+/* Responsive option grid */
 .options-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 15px;
-  justify-content: center;
+  justify-items: center;
+  width: 100%;
 }
 
 /* Each selectable option */
 .option-card {
-  width: 140px;
+  width: 100%;
+  max-width: 140px;
   padding: 15px;
   border: 2px solid var(--border-color, #ddd);
   border-radius: 10px;
@@ -270,6 +273,7 @@ body {
   background: var(--bg-color, white);
 }
 
+
 /* Hover effect */
 .option-card:hover {
   background: var(--hover-bg, #f8f8f8);
@@ -278,10 +282,16 @@ body {
 
 /* Image inside option */
 .option-card img {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
   margin-bottom: 8px;
+}
+
+.option-card:disabled {
+  filter: grayscale(0.8);
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Text inside option */
@@ -305,6 +315,20 @@ body {
   transform: scale(1.05); /* Slight floating effect */
 }
 
+/* Container for Confirm and Cancel buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.confirm-btn, .cancel-btn {
+  flex: 1;
+  padding: 12px;
+}
+
+
 /* Cancel button */
 .cancel-btn {
   background: #d9534f;
@@ -320,6 +344,7 @@ body {
 /* Cancel button hover */
 .cancel-btn:hover {
   background: #c9302c;
+  cursor: pointer;
 }
 
 /* Cancel button */
@@ -338,6 +363,18 @@ body {
 /* Cancel button hover */
 .confirm-btn:hover {
   background: #F0A300;
+  cursor: pointer;
+}
+
+@media (max-width: 350px) {
+  .option-card {
+    max-width: 110px;
+    padding: 10px;
+  }
+  .option-card img {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 /* Dark mode support */
