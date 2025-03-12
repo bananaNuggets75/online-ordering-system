@@ -4,15 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import Image from "next/image";
 
-interface CartItem {
-  id: number;
-  name: string;
-  size: string;
-  price: number;
-  quantity: number;
-  image: string;
-}
-
 const menuData = [
   {
     id: 1,
@@ -20,9 +11,10 @@ const menuData = [
     description: "Flaky croissant waffles with a crispy edge.",
     isAvailable: true,
     options: [
-      { size: "Mini", price: 55 },
-      { size: "Regular", price: 90 },
+      { size: "Mini", price: 59 },
+      { size: "Regular", price: 89 },
     ],
+    flavors: ["Biscoff Cream", "Cookies and Cream", "Matcha Cream Almond"],
     image: "/croffles.jpg",
   },
   {
@@ -31,17 +23,19 @@ const menuData = [
     description: "Soft donuts coated in cinnamon sugar.",
     isAvailable: true,
     options: [
-      { size: "3 pcs", price: 35 },
-      { size: "5 pcs", price: 55 },
+      { size: "3 pcs", price: 39 },
+      { size: "5 pcs", price: 59 },
     ],
+    flavors: ["Nutella", "Caramel", "Biscoff"],
     image: "/churro-donut.jpg",
   },
   {
     id: 3,
-    name: "Popping Boba",
+    name: "Chewy Soda",
     description: "Refreshing fruit-flavored boba pearls.",
     isAvailable: true,
-    price: 40.0,
+    price: 45,
+    flavors: ["Strawberry", "Blueberry", "Lychee", "Green Apple"],
     image: "/popping-boba.jpg",
   },
 ];
@@ -50,19 +44,18 @@ const MenuItemDetail: React.FC = () => {
   const { id } = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
-  
-  // ✅ `menuItem` should always be defined BEFORE `useState`
+
   const menuItem = menuData.find((item) => item.id === Number(id));
 
-  // ✅ Avoid returning early! Define state first.
+  // ✅ Define Hooks **before any return statement**
   const [quantity, setQuantity] = useState(1);
-  const options = menuItem?.options ?? []; // Default to empty array
+  const options = menuItem?.options ?? [];
   const hasOptions = options.length > 0;
   const defaultOption = hasOptions ? options[0] : { size: "One Size", price: menuItem?.price || 0 };
   const [selectedOption, setSelectedOption] = useState(defaultOption);
+  const [selectedFlavor, setSelectedFlavor] = useState(menuItem?.flavors?.[0] ?? "No Flavor");
 
-  // ✅ Now safe to return (Hooks are already executed)
-  if (!menuItem) return <p>Item not found</p>;
+  if (!menuItem) return <p>Item not found</p>; // ✅ This is now AFTER Hooks
 
   return (
     <div className="menu-details-container">
@@ -80,34 +73,53 @@ const MenuItemDetail: React.FC = () => {
           <h2 className="menu-details-title">{menuItem.name}</h2>
           <p className="menu-details-description">{menuItem.description}</p>
 
-          {/* ✅ Show dropdown only if options exist */}
-          {hasOptions ? (
-            <select
-              className="menu-details-select"
-              value={selectedOption.size}
-              onChange={(e) => {
-                const selectedSize = options.find((opt) => opt.size === e.target.value);
-                if (selectedSize) setSelectedOption(selectedSize);
-              }}
-            >
-              {options.map((option, index) => (
-                <option key={index} value={option.size}>
-                  {option.size} - ₱{option.price.toFixed(2)}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <p className="menu-details-price">₱{menuItem.price?.toFixed(2)}</p>
+          {/* ✅ Dropdown for size selection */}
+          {hasOptions && (
+            <div className="size-dropdown mt-4">
+              <h3 className="text-lg font-bold">Choose a Size:</h3>
+              <select
+                className="border p-2 rounded w-full"
+                value={selectedOption.size}
+                onChange={(e) => {
+                  const selectedSize = options.find((opt) => opt.size === e.target.value);
+                  if (selectedSize) setSelectedOption(selectedSize);
+                }}
+              >
+                {options.map((option, index) => (
+                  <option key={index} value={option.size}>
+                    {option.size} - ₱{option.price.toFixed(2)}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
 
-          <div className="quantity-controls">
+          {/* ✅ Dropdown for flavor selection */}
+          {menuItem.flavors && (
+            <div className="flavor-dropdown mt-4">
+              <h3 className="text-lg font-bold">Choose a Flavor:</h3>
+              <select
+                className="border p-2 rounded w-full"
+                value={selectedFlavor}
+                onChange={(e) => setSelectedFlavor(e.target.value)}
+              >
+                {menuItem.flavors.map((flavor, index) => (
+                  <option key={index} value={flavor}>
+                    {flavor}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="quantity-controls mt-4">
             <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
-            <span>{quantity}</span>
+            <span className="px-4">{quantity}</span>
             <button onClick={() => setQuantity(quantity + 1)}>+</button>
           </div>
 
           <button
-            className="add-to-cart"
+            className="add-to-cart mt-4"
             onClick={() =>
               addToCart({
                 id: menuItem.id,
@@ -116,7 +128,8 @@ const MenuItemDetail: React.FC = () => {
                 price: selectedOption.price,
                 quantity,
                 image: menuItem.image,
-              } as CartItem)
+                flavor: selectedFlavor, // ✅ Always includes a flavor
+              })
             }
           >
             Add to Cart

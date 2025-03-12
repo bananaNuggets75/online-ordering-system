@@ -10,12 +10,13 @@ type CartItem = {
   price: number;
   quantity: number;
   image: string;
+  flavor: string;
 };
 
 interface CartContextType {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number, size: string) => void;
+  removeFromCart: (id: number, size: string, flavor?: string) => void;
   clearCart: () => void;
 }
 
@@ -55,12 +56,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     toast.success(`${item.name} (${item.size}) added to cart!`);
   };
 
-  const removeFromCart = (id: number, size: string) => {
+  const removeFromCart = (id: number, size: string, flavor?: string) =>  {
     setCart((prevCart) =>
-      prevCart.filter((item) => !(item.id === id && item.size === size))
+      prevCart.filter((item) => !(item.id === id && item.size === size && item.flavor === flavor))
     );
     toast.success("Item removed from cart.");
   };
+  
 
   const clearCart = () => {
     setCart([]);
