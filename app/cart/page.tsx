@@ -33,7 +33,15 @@ export default function CheckOutPage() {
 
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
-        items: cart,
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          size: item.size,
+          flavor: item.flavor, // ✅ Includes flavor in the order
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
         customerInfo: {
           name,  
           contact,
@@ -70,14 +78,17 @@ export default function CheckOutPage() {
       ) : (
         <div className="cart-list">
           {cart.map((item) => (
-            <div key={`${item.id}-${item.size}`} className="cart-item">
+            <div key={`${item.id}-${item.size}-${item.flavor}`} className="cart-item">
               <div>
-                <h2>{item.name} {item.size ? `(${item.size})` : ""}</h2> 
+                <h2>
+                  {item.name} {item.size ? `(${item.size})` : ""} 
+                  {item.flavor ? ` - ${item.flavor}` : ""}
+                </h2> 
                 <p>₱{item.price.toFixed(2)} x {item.quantity}</p>
               </div>
               <button 
                 className="remove-btn"
-                onClick={() => removeFromCart(item.id, item.size)} 
+                onClick={() => removeFromCart(item.id, item.size, item.flavor)} // ✅ Now removes specific flavor
               >
                 Remove
               </button>

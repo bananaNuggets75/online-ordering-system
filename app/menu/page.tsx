@@ -13,9 +13,10 @@ const menuData = [
     image: "/croffles.jpg",
     isOutOfStock: false,
     options: [
-      { size: "Mini", price: 55, isOutOfStock: false },
-      { size: "Regular", price: 90, isOutOfStock: false } // ❌ Regular size is out of stock
-    ]
+      { size: "Mini", price: 59, isOutOfStock: false },
+      { size: "Regular", price: 89, isOutOfStock: false }
+    ],
+    flavors: ["Biscoff Cream", "Cookies and Cream", "Matcha Cream Almond"]
   },
   {
     id: 2,
@@ -24,17 +25,19 @@ const menuData = [
     image: "/churro-donut.jpg",
     isOutOfStock: false,
     options: [
-      { size: "3 pcs", price: 35, isOutOfStock: false },
-      { size: "5 pcs", price: 55, isOutOfStock: false } // ❌ 5 pcs is out of stock
-    ]
+      { size: "3 pcs", price: 39, isOutOfStock: false },
+      { size: "5 pcs", price: 59, isOutOfStock: false }
+    ],
+    flavors: ["Nutella", "Caramel", "Biscoff"]
   },
   {
     id: 3,
-    name: "Popping Boba",
+    name: "Chewy Soda",
     description: "Refreshing fruit-flavored boba pearls.",
     image: "/popping-boba.jpg",
-    price: 40,
-    isOutOfStock: false // ❌ Fully out of stock
+    price: 45,
+    isOutOfStock: false,
+    flavors: ["Strawberry", "Blueberry", "Lychee", "Green Apple"]
   }
 ];
 
@@ -43,11 +46,11 @@ const MenuPage: React.FC = () => {
   const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<(typeof menuData)[0] | null>(null);
   const [selectedOption, setSelectedOption] = useState<{ size: string; price: number; isOutOfStock?: boolean } | null>(null);
+  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
 
   const handleAddToCart = () => {
     if (!selectedItem) return;
 
-    // Prevent adding out-of-stock items
     if (selectedItem.isOutOfStock || (selectedOption && selectedOption.isOutOfStock)) {
       toast.error("This item is out of stock!");
       return;
@@ -58,12 +61,14 @@ const MenuPage: React.FC = () => {
       name: selectedItem.name,
       size: selectedOption?.size ?? "One Size",
       price: selectedOption?.price ?? selectedItem.price ?? 0,
+      flavor: selectedFlavor ?? "No Flavor",
       quantity: 1,
       image: selectedItem.image
     });
 
     setSelectedItem(null);
     setSelectedOption(null);
+    setSelectedFlavor(null);
   };
 
   return (
@@ -73,7 +78,6 @@ const MenuPage: React.FC = () => {
       <div className="menu-list">
         {menuData.map((item) => (
           <div key={item.id} className="menu-item">
-            {/* Prevent clicking on out-of-stock items */}
             <div
               onClick={() => {
                 if (!item.isOutOfStock) {
@@ -96,7 +100,6 @@ const MenuPage: React.FC = () => {
               </div>
             </div>
 
-            {/* "Add" button */}
             <button
               className="add-to-cart"
               onClick={(e) => {
@@ -107,6 +110,7 @@ const MenuPage: React.FC = () => {
                 }
                 setSelectedItem(item);
                 setSelectedOption(null);
+                setSelectedFlavor(null);
               }}
               disabled={item.isOutOfStock}
             >
@@ -116,7 +120,7 @@ const MenuPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Modal for Selecting Options */}
+      {/* Modal for Selecting Options & Flavors */}
       {selectedItem && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -145,28 +149,48 @@ const MenuPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              // No options (e.g., Popping Boba)
+              // No options (e.g., Chewy Soda)
               <button className="option-card" onClick={handleAddToCart} disabled={selectedItem.isOutOfStock}>
                 <Image src={selectedItem.image} alt={selectedItem.name} width={100} height={100} />
                 <p>₱{selectedItem.price}</p>
               </button>
             )}
-            <div className="modal-buttons">
-            {/* "Confirm" button to add item to cart */}
-            <button
-              onClick={handleAddToCart}
-              className="confirm-btn"
-              disabled={selectedItem.isOutOfStock || (selectedItem.options && !selectedOption)}
-            >
-              Confirm
-            </button>
 
-            {/* Cancel Button */}
-            <button className="cancel-btn" onClick={() => setSelectedItem(null)}>
-              Cancel
-            </button>
+            {/* Flavor Selection */}
+            {selectedItem.flavors && selectedItem.flavors.length > 0 && (
+              <div className="flavor-options mt-4">
+                <h3 className="text-lg font-bold">Choose a Flavor:</h3>
+                <select
+                  className="border p-2 rounded w-full"
+                  value={selectedFlavor || ""}
+                  onChange={(e) => setSelectedFlavor(e.target.value)}
+                >
+                  <option value="">Select a flavor</option>
+                  {selectedItem.flavors.map((flavor, index) => (
+                    <option key={index} value={flavor}>
+                      {flavor}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="modal-buttons mt-4">
+              {/* "Confirm" button to add item to cart */}
+              <button
+                onClick={handleAddToCart}
+                className="confirm-btn"
+                disabled={selectedItem.isOutOfStock || (selectedItem.options && !selectedOption)}
+              >
+                Confirm
+              </button>
+
+              {/* Cancel Button */}
+              <button className="cancel-btn" onClick={() => setSelectedItem(null)}>
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
         </div>
       )}
     </div>

@@ -25,6 +25,7 @@ interface Order {
     quantity: number; 
     price: number; 
     size?: string; 
+    flavor?: string;
     stock?: number;
     isOutOfStock?: boolean;
   }[];
@@ -235,7 +236,9 @@ const AdminDashboard = () => {
           <ul>
             {order.items.map((item, index) => (
               <li key={index}>
-                {item.name} {item.size ? `(${item.size})` : ""} - {item.quantity}x
+                {item.name} {item.size ? `(${item.size})` : ""} 
+                {item.flavor ? ` - Flavor: ${item.flavor}` : ""} 
+                - {item.quantity}x
               </li>
             ))}
           </ul>
