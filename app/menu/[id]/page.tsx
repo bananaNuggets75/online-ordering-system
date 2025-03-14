@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -6,7 +7,7 @@ import Image from "next/image";
 
 const menuData = [
   {
-    id: 1,
+    id: "1", // ✅ Changed to string for Firestore compatibility
     name: "Croffles",
     description: "Flaky croissant waffles with a crispy edge.",
     isAvailable: true,
@@ -18,7 +19,7 @@ const menuData = [
     image: "/croffles.jpg",
   },
   {
-    id: 2,
+    id: "2",
     name: "Churro Donuts",
     description: "Soft donuts coated in cinnamon sugar.",
     isAvailable: true,
@@ -30,7 +31,7 @@ const menuData = [
     image: "/churro-donut.jpg",
   },
   {
-    id: 3,
+    id: "3",
     name: "Chewy Soda",
     description: "Refreshing fruit-flavored boba pearls.",
     isAvailable: true,
@@ -41,26 +42,53 @@ const menuData = [
 ];
 
 const MenuItemDetail: React.FC = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // ✅ Ensure Firestore ID type consistency
   const router = useRouter();
   const { addToCart } = useCart();
 
-  const menuItem = menuData.find((item) => item.id === Number(id));
+  // ✅ Find the menu item by ID (converted to string)
+  const menuItem = menuData.find((item) => item.id === id);
 
-  // ✅ Define Hooks **before any return statement**
+  // ✅ State Hooks
   const [quantity, setQuantity] = useState(1);
   const options = menuItem?.options ?? [];
   const hasOptions = options.length > 0;
-  const defaultOption = hasOptions ? options[0] : { size: "One Size", price: menuItem?.price || 0 };
-  const [selectedOption, setSelectedOption] = useState(defaultOption);
-  const [selectedFlavor, setSelectedFlavor] = useState(menuItem?.flavors?.[0] ?? "No Flavor");
 
-  if (!menuItem) return <p>Item not found</p>; // ✅ This is now AFTER Hooks
+  const defaultOption = hasOptions
+    ? options[0]
+    : { size: "One Size", price: menuItem?.price || 0 };
+
+  const [selectedOption, setSelectedOption] = useState(defaultOption);
+  const [selectedFlavor, setSelectedFlavor] = useState(
+    menuItem?.flavors?.[0] ?? "No Flavor"
+  );
+
+  if (!menuItem) return <p>Item not found</p>;
+
+  // ✅ Handle adding to cart
+  const handleAddToCart = () => {
+    addToCart({
+      id: menuItem.id,
+      name: menuItem.name,
+      size: selectedOption.size,
+      price: selectedOption.price,
+      quantity,
+      image: menuItem.image,
+      flavor: selectedFlavor,
+    });
+
+    router.back(); // ✅ Redirect after adding to cart
+  };
 
   return (
     <div className="menu-details-container">
-      <button onClick={() => router.back()} className="back-button">Back</button>
+      {/* ✅ Back Button */}
+      <button onClick={() => router.back()} className="back-button">
+        Back
+      </button>
+
       <div className="menu-details">
+        {/* ✅ Image */}
         <Image
           src={menuItem.image}
           alt={menuItem.name}
@@ -69,11 +97,13 @@ const MenuItemDetail: React.FC = () => {
           height={200}
           priority
         />
+
         <div className="menu-details-content">
+          {/* ✅ Title & Description */}
           <h2 className="menu-details-title">{menuItem.name}</h2>
           <p className="menu-details-description">{menuItem.description}</p>
 
-          {/* ✅ Dropdown for size selection */}
+          {/* ✅ Size Selection */}
           {hasOptions && (
             <div className="size-dropdown mt-4">
               <h3 className="text-lg font-bold">Choose a Size:</h3>
@@ -81,7 +111,9 @@ const MenuItemDetail: React.FC = () => {
                 className="border p-2 rounded w-full"
                 value={selectedOption.size}
                 onChange={(e) => {
-                  const selectedSize = options.find((opt) => opt.size === e.target.value);
+                  const selectedSize = options.find(
+                    (opt) => opt.size === e.target.value
+                  );
                   if (selectedSize) setSelectedOption(selectedSize);
                 }}
               >
@@ -94,7 +126,7 @@ const MenuItemDetail: React.FC = () => {
             </div>
           )}
 
-          {/* ✅ Dropdown for flavor selection */}
+          {/* ✅ Flavor Selection */}
           {menuItem.flavors && (
             <div className="flavor-dropdown mt-4">
               <h3 className="text-lg font-bold">Choose a Flavor:</h3>
@@ -112,25 +144,27 @@ const MenuItemDetail: React.FC = () => {
             </div>
           )}
 
+          {/* ✅ Quantity Control */}
           <div className="quantity-controls mt-4">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+            <button
+              className="quantity-btn"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              -
+            </button>
             <span className="px-4">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)}>+</button>
+            <button
+              className="quantity-btn"
+              onClick={() => setQuantity(quantity + 1)}
+            >
+              +
+            </button>
           </div>
 
+          {/* ✅ Add to Cart Button */}
           <button
-            className="add-to-cart mt-4"
-            onClick={() =>
-              addToCart({
-                id: menuItem.id,
-                name: menuItem.name,
-                size: selectedOption.size,
-                price: selectedOption.price,
-                quantity,
-                image: menuItem.image,
-                flavor: selectedFlavor, // ✅ Always includes a flavor
-              })
-            }
+            className="add-to-cart-btn mt-4"
+            onClick={handleAddToCart}
           >
             Add to Cart
           </button>
