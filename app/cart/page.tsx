@@ -87,11 +87,12 @@ export default function CheckOutPage() {
                 <p>₱{item.price.toFixed(2)} x {item.quantity}</p>
               </div>
               <button 
-                className="remove-btn"
-                onClick={() => removeFromCart(item.id, item.size, item.flavor)} // ✅ Now removes specific flavor
-              >
-                Remove
-              </button>
+  className="remove-btn"
+  onClick={() => removeFromCart(item.id, item.size, item.flavor ?? "No Flavor")} 
+>
+  Remove
+</button>
+
             </div>
           ))}
 
