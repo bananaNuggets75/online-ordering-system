@@ -4,16 +4,27 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
+import { User } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function CheckOutPage() {  
   const { cart, removeFromCart, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [deliveryType, setDeliveryType] = useState("Pickup");
+  const [deliveryLocation, setDeliveryLocation] = useState("");
   const router = useRouter();
 
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null; // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    const unsubscribe = auth.onAuthStateChanged(setUser);
+    return () => unsubscribe();
+  }, []);
+
+  if (!mounted) return null;
 
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
@@ -22,32 +33,34 @@ export default function CheckOutPage() {
       toast.error("Your cart is empty!");
       return;
     }
-
-    const storedCustomerInfo = sessionStorage.getItem("customerInfo");
-    if (!storedCustomerInfo) {
-      toast.error("Please fill out the order form first.");
+    if (!user) {
+      toast.error("Please log in to place an order.");
+      router.push("/login");
+      return;
+    }
+    if (!name || !contact || (deliveryType === "Delivery" && !deliveryLocation)) {
+      toast.error("Please fill in all required fields.");
       return;
     }
 
-    const { name, contact, deliveryType, deliveryLocation } = JSON.parse(storedCustomerInfo);
-
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
-        items: cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          size: item.size,
-          flavor: item.flavor, // ✅ Includes flavor in the order
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
+        userId: user.uid,
         customerInfo: {
-          name,  
+          name,
           contact,
           deliveryType,
           deliveryLocation: deliveryType === "Delivery" ? deliveryLocation : "",
         },
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          size: item.size,
+          flavor: item.flavor,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
         status: "Received",
         timestamp: serverTimestamp(),
       });
@@ -69,13 +82,11 @@ export default function CheckOutPage() {
       ) : (
         <>
           <h1 className="cart-title">Almost There!</h1>
-          <p className="cart-subtitle">Please double-check your items before placing your order.</p>
+          <p className="cart-subtitle">Please enter your details and review your items.</p>
         </>
       )}
-  
-      {cart.length === 0 ? (
-        <p className="text-gray-500">You have no items in your cart.</p>
-      ) : (
+
+      {cart.length > 0 && (
         <div className="cart-list">
           {cart.map((item) => (
             <div key={`${item.id}-${item.size}-${item.flavor}`} className="cart-item">
@@ -88,13 +99,62 @@ export default function CheckOutPage() {
               </div>
               <button 
                 className="remove-btn"
-                onClick={() => removeFromCart(item.id, item.size, item.flavor)} // ✅ Now removes specific flavor
+                onClick={() => removeFromCart(item.id, item.size, item.flavor ?? "No Flavor")}
               >
                 Remove
               </button>
             </div>
           ))}
 
+          {/* Delivery Details Form */}
+          <div className="mt-4">
+            <h2 className="text-xl font-bold">Delivery Details</h2>
+            <div className="form-group">
+              <label>Name</label>
+              <input 
+                type="text" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)}
+                className="input-field" 
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label>Contact Number</label>
+              <input 
+                type="text" 
+                value={contact} 
+                onChange={(e) => setContact(e.target.value)}
+                className="input-field" 
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label>Delivery Type</label>
+              <select 
+                value={deliveryType} 
+                onChange={(e) => setDeliveryType(e.target.value)}
+                className="input-field"
+              >
+                <option value="Pickup">Pickup</option>
+                <option value="Delivery">Delivery</option>
+              </select>
+            </div>
+            {deliveryType === "Delivery" && (
+              <div className="form-group">
+                <label>Delivery Location</label>
+                <input 
+                  type="text" 
+                  value={deliveryLocation} 
+                  onChange={(e) => setDeliveryLocation(e.target.value)}
+                  className="input-field" 
+                  required 
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Order Summary & Buttons */}
           <div className="mt-4">
             <p className="text-xl font-bold">Total: ₱{totalPrice.toFixed(2)}</p>
             <div className="flex gap-2 mt-2">
@@ -110,4 +170,4 @@ export default function CheckOutPage() {
       )}
     </div>
   );
-}  
+}

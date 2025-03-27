@@ -1,57 +1,70 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, DocumentData } from "firebase/firestore";
 
-const menuData = [
-  {
-    id: 1,
-    name: "Croffles",
-    description: "Flaky croissant waffles",
-    image: "/croffles.jpg",
-    isOutOfStock: false,
-    options: [
-      { size: "Mini", price: 59, isOutOfStock: false },
-      { size: "Regular", price: 89, isOutOfStock: false }
-    ],
-    flavors: ["Biscoff Cream", "Cookies and Cream", "Matcha Cream Almond"]
-  },
-  {
-    id: 2,
-    name: "Churro Donuts",
-    description: "Soft donuts coated in cinnamon sugar",
-    image: "/churro-donut.jpg",
-    isOutOfStock: false,
-    options: [
-      { size: "3 pcs", price: 39, isOutOfStock: false },
-      { size: "5 pcs", price: 59, isOutOfStock: false }
-    ],
-    flavors: ["Nutella", "Caramel", "Biscoff"]
-  },
-  {
-    id: 3,
-    name: "Chewy Soda",
-    description: "Refreshing fruit-flavored boba pearls.",
-    image: "/popping-boba.jpg",
-    price: 45,
-    isOutOfStock: false,
-    flavors: ["Strawberry", "Blueberry", "Lychee", "Green Apple"]
-  }
-];
+// --- Interfaces ---
+interface Option {
+  size: string;
+  price: number;
+  isOutOfStock?: boolean;
+}
 
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price?: number;
+  isOutOfStock?: boolean;
+  image: string;
+  options?: Option[];
+  flavors?: string[];
+}
+
+// --- Component ---
 const MenuPage: React.FC = () => {
   const { addToCart } = useCart();
   const router = useRouter();
-  const [selectedItem, setSelectedItem] = useState<(typeof menuData)[0] | null>(null);
-  const [selectedOption, setSelectedOption] = useState<{ size: string; price: number; isOutOfStock?: boolean } | null>(null);
-  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedOption, setSelectedOption] = useState<Option | null>(null);
+  const [selectedFlavor, setSelectedFlavor] = useState<string>("");
 
+  // ✅ Real-time fetch from Firebase
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "menu"), (snapshot) => {
+      const items = snapshot.docs.map((doc) => {
+        const data = doc.data() as DocumentData;
+        return {
+          id: doc.id,
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          isOutOfStock: data.isAvailable === false, // Handle availability
+          image: data.image,
+          options: data.options || [],
+          flavors: data.flavors || [],
+        } as MenuItem;
+      });
+      setMenuItems(items);
+    });
+
+    return () => unsubscribe(); // Cleanup on unmount
+  }, []);
+
+  // ✅ Handle Add to Cart
   const handleAddToCart = () => {
     if (!selectedItem) return;
 
-    if (selectedItem.isOutOfStock || (selectedOption && selectedOption.isOutOfStock)) {
+    const isItemOutOfStock =
+      selectedItem.isOutOfStock ||
+      (selectedOption && selectedOption.isOutOfStock);
+
+    if (isItemOutOfStock) {
       toast.error("This item is out of stock!");
       return;
     }
@@ -61,14 +74,16 @@ const MenuPage: React.FC = () => {
       name: selectedItem.name,
       size: selectedOption?.size ?? "One Size",
       price: selectedOption?.price ?? selectedItem.price ?? 0,
-      flavor: selectedFlavor ?? "No Flavor",
+      flavor: selectedFlavor || "No Flavor",
       quantity: 1,
-      image: selectedItem.image
+      image: selectedItem.image,
     });
 
+    toast.success(`${selectedItem.name} added to cart!`);
+    // Reset selections
     setSelectedItem(null);
     setSelectedOption(null);
-    setSelectedFlavor(null);
+    setSelectedFlavor("");
   };
 
   return (
@@ -76,18 +91,22 @@ const MenuPage: React.FC = () => {
       <h1 className="text-center text-3xl font-bold mb-4">Menu</h1>
 
       <div className="menu-list">
-        {menuData.map((item) => (
-          <div key={item.id} className="menu-item">
+        {menuItems.map((item) => (
+          <div key={item.id} className={`menu-item ${item.isOutOfStock ? "out-of-stock" : ""}`}>
+            {/* ✅ Disable click when out of stock */}
             <div
               onClick={() => {
                 if (!item.isOutOfStock) {
                   router.push(`/menu/${item.id}`);
                 }
               }}
-              className={`cursor-pointer ${item.isOutOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`cursor-pointer ${
+                item.isOutOfStock ? "pointer-events-none opacity-50" : ""
+              }`}
             >
+              {/* ✅ Fix Image */}
               <Image
-                src={item.image}
+                src={item.image || "/placeholder.png"}
                 alt={item.name}
                 className="menu-item-image"
                 width={300}
@@ -98,6 +117,13 @@ const MenuPage: React.FC = () => {
                 <h3>{item.name}</h3>
                 <p className="menu-item-description">{item.description}</p>
               </div>
+
+              {/* ✅ Out of Stock Badge */}
+              {item.isOutOfStock && (
+                <div className="out-of-stock-badge">
+                  Out of Stock
+                </div>
+              )}
             </div>
 
             <button
@@ -110,7 +136,7 @@ const MenuPage: React.FC = () => {
                 }
                 setSelectedItem(item);
                 setSelectedOption(null);
-                setSelectedFlavor(null);
+                setSelectedFlavor("");
               }}
               disabled={item.isOutOfStock}
             >
@@ -120,8 +146,8 @@ const MenuPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Modal for Selecting Options & Flavors */}
-      {selectedItem && (
+       {/* Modal for Selecting Options & Flavors */}
+       {selectedItem && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h2 className="text-xl font-bold mb-4">{selectedItem.name}</h2>
