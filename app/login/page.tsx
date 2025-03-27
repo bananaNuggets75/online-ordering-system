@@ -4,61 +4,61 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import Link from "next/link";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError("");
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/menu"); // Redirect after successful login
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unexpected error occurred.");
-      }
+      router.push("/menu"); // Redirect to menu after login
+    } catch (err: any) {
+      setError("Invalid credentials. Please try again.");
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-80">
-        <h2 className="text-xl font-bold mb-4 text-center">Login here</h2>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 border rounded mb-2"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border rounded mb-2"
-          required
-        />
-        <button type="submit" className="w-full bg-orange-500 text-white p-2 rounded">
-          Sign in
-        </button>
-        <p className="text-center text-sm mt-3">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-orange-500 font-semibold">
-            Register
-          </Link>
-        </p>
-      </form>
+    <div className="login-container">
+      <div className="login-box">
+        <h2 className="login-title">Login</h2>
+        {error && <p className="error-message">{error}</p>}
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="input-group">
+            <input
+              type="email"
+              placeholder="Username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-field"
+              required
+            />
+          </div>
+          <div className="input-group">
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input-field"
+              required
+            />
+          </div>
+          <div className="login-options">
+            <label className="remember-me">
+              <input type="checkbox" /> Remember me
+            </label>
+            <a href="#" className="forgot-password">Forgot password?</a>
+          </div>
+          <button type="submit" className="login-button">Login</button>
+        </form>
+        <p className="register-link text-black">Don't have an account? <a href="/register">Create Account</a></p>
+      </div>
     </div>
   );
 };
