@@ -158,7 +158,7 @@ const MenuPage: React.FC = () => {
               src={selectedItem.image || "/placeholder.png"}
               alt={selectedItem.name}
               width={100}
-              height={100}
+              height={80}
             />
 
             {/* ✅ Options */}
