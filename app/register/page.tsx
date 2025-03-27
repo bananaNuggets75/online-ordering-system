@@ -6,14 +6,14 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 const RegisterPage = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+    setError("");
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -28,30 +28,35 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleRegister} className="bg-white p-6 rounded shadow-md">
-        <h2 className="text-xl font-bold mb-4">Register</h2>
-        {error && <p className="text-red-500">{error}</p>}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 border rounded mb-2"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border rounded mb-2"
-          required
-        />
-        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">
-          Register
-        </button>
-      </form>
+    <div className="register-container">
+      <div className="register-box">
+        <h2 className="register-title">Register</h2>
+        {error && <p className="error-message">{error}</p>}
+        <form onSubmit={handleRegister} className="register-form">
+          <div className="input-group">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-field"
+              required
+            />
+          </div>
+          <div className="input-group">
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input-field"
+              required
+            />
+          </div>
+          <button type="submit" className="register-button">Register</button>
+        </form>
+        <p className="login-link">Already have an account? <a href="/login">Login</a></p>
+      </div>
     </div>
   );
 };
