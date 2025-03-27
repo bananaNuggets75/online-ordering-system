@@ -7,21 +7,25 @@ import { toast } from "react-hot-toast";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
+    setError(null);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Login successful!");
       router.push("/menu"); // ✅ Redirect to Menu page
-    } catch (err: any) {
-      setError(err.message);
-      toast.error("Login failed. Check your credentials.");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+        toast.error("Login failed. Check your credentials.");
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
     }
   };
 
