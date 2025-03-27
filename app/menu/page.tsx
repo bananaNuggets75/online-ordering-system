@@ -146,30 +146,20 @@ const MenuPage: React.FC = () => {
         ))}
       </div>
 
-      {/* ✅ Modal for Selecting Options & Flavors */}
-      {selectedItem && (
+       {/* Modal for Selecting Options & Flavors */}
+       {selectedItem && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h2 className="text-xl font-bold mb-4">{selectedItem.name}</h2>
             <p className="text-gray-600 mb-2">{selectedItem.description}</p>
 
-            {/* ✅ Fix Image in Modal */}
-            <Image
-              src={selectedItem.image || "/placeholder.png"}
-              alt={selectedItem.name}
-              width={100}
-              height={80}
-            />
-
-            {/* ✅ Options */}
+            {/* Show options as selectable cards */}
             {selectedItem.options && selectedItem.options.length > 0 ? (
               <div className="options-grid">
                 {selectedItem.options.map((option, index) => (
                   <button
                     key={index}
-                    className={`option-card ${
-                      selectedOption?.size === option.size ? "selected" : ""
-                    } ${
+                    className={`option-card ${selectedOption?.size === option.size ? "selected" : ""} ${
                       option.isOutOfStock ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     onClick={() => {
@@ -177,27 +167,27 @@ const MenuPage: React.FC = () => {
                     }}
                     disabled={option.isOutOfStock}
                   >
+                    <Image src={selectedItem.image} alt={option.size} width={100} height={80} />
                     <p>{option.size}</p>
                     <p className="text-green-600 font-bold">₱{option.price}</p>
-                    {option.isOutOfStock && <p className="text-red-500">Out of Stock</p>}
+                    {option.isOutOfStock && <p className="text-red-500 font-bold">Out of Stock</p>}
                   </button>
                 ))}
               </div>
             ) : (
-              <button
-                className="option-card"
-                onClick={handleAddToCart}
-                disabled={selectedItem.isOutOfStock}
-              >
-                ₱{selectedItem.price}
+              // No options (e.g., Chewy Soda)
+              <button className="option-card" onClick={handleAddToCart} disabled={selectedItem.isOutOfStock}>
+                <Image src={selectedItem.image} alt={selectedItem.name} width={100} height={100} />
+                <p>₱{selectedItem.price}</p>
               </button>
             )}
 
-            {/* ✅ Flavors */}
+            {/* Flavor Selection */}
             {selectedItem.flavors && selectedItem.flavors.length > 0 && (
-              <div className="flavor-options">
+              <div className="flavor-options mt-4">
                 <h3 className="text-lg font-bold">Choose a Flavor:</h3>
                 <select
+                  className="border p-2 rounded w-full"
                   value={selectedFlavor || ""}
                   onChange={(e) => setSelectedFlavor(e.target.value)}
                 >
@@ -211,15 +201,18 @@ const MenuPage: React.FC = () => {
               </div>
             )}
 
-            {/* ✅ Modal Buttons */}
-            <div className="modal-buttons">
-              <button onClick={handleAddToCart} className="confirm-btn">
+            <div className="modal-buttons mt-4">
+              {/* "Confirm" button to add item to cart */}
+              <button
+                onClick={handleAddToCart}
+                className="confirm-btn"
+                disabled={selectedItem.isOutOfStock || (selectedItem.options && !selectedOption)}
+              >
                 Confirm
               </button>
-              <button
-                className="cancel-btn"
-                onClick={() => setSelectedItem(null)}
-              >
+
+              {/* Cancel Button */}
+              <button className="cancel-btn" onClick={() => setSelectedItem(null)}>
                 Cancel
               </button>
             </div>
