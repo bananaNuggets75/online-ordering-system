@@ -1624,8 +1624,9 @@ th {
   margin-bottom: 15px;
 }
 
-.remember-me input {
+.remember-me {
   margin-right: 5px;
+  color:black;
 }
 
 .forgot-password {

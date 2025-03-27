@@ -14,14 +14,15 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
+  
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/menu"); // Redirect to menu after login
-    } catch (err: any) {
+    } catch {
       setError("Invalid credentials. Please try again.");
     }
   };
+  
 
   return (
     <div className="login-container">
@@ -57,7 +58,7 @@ const LoginPage = () => {
           </div>
           <button type="submit" className="login-button">Login</button>
         </form>
-        <p className="register-link text-black">Don't have an account? <a href="/register">Create Account</a></p>
+        <p className="register-link">Don&apos;t have an account? <a href="/register">Create Account</a></p>
       </div>
     </div>
   );
