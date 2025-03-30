@@ -17,6 +17,9 @@ const Sidebar: React.FC = () => {
         <button className="close-btn" onClick={() => setIsOpen(false)}>×</button>
         <nav>
           <ul>
+          <li>
+            <Link href="/profile" onClick={() => setIsOpen(false)}>👤 Profile</Link>
+            </li>  
             <li>
               <Link href="/menu" onClick={() => setIsOpen(false)}>🏠 Menu</Link>
             </li>
