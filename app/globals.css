@@ -1,3 +1,10 @@
+@tailwind base;
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+@tailwind components;
+@tailwind utilities;
 :root {
   --background: #ffffff;
   --foreground: #f8f8f8;
@@ -1679,5 +1686,144 @@ th {
   margin-bottom: 10px;
 }
 
+/* Container Layout */
+.profile-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; /* Center everything */
+  padding-bottom: 80px;
+  padding: 0 16px;
+}
 
+/* Profile Card */
+.profile-card {
+  width: 70%;
+  max-width: 900px;
+  margin-top: 24px;
+  padding: 32px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  text-align: center; /* Center all text */
+  min-height: 80vh;
+}
 
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .profile-card {
+    background-color: black;
+    color: white;
+  }
+}
+
+/* Profile Picture */
+.profile-picture {
+  border-radius: 50%;
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border: 3px solid #ccc;
+  margin-bottom: 16px;
+}
+
+/* Profile Content */
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Input Fields */
+.profile-input {
+  margin-top: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 300px;
+  background-color: transparent;
+}
+
+/* Description Box */
+.description {
+  margin-top: 20px;
+}
+
+.description-box {
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: transparent;
+  margin-top: 10px;
+}
+
+/* Buttons */
+.profile-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (min-width: 640px) {
+  .profile-buttons {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.button {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  border: none;
+  color: white;
+}
+
+.button-save {
+  background-color: #22c55e;
+}
+
+.button-save:hover {
+  background-color: #16a34a;
+}
+
+.button-cancel {
+  background-color: #9ca3af;
+}
+
+.button-cancel:hover {
+  background-color: #6b7280;
+}
+
+.button-edit {
+  background-color: #3b82f6;
+}
+
+.button-edit:hover {
+  background-color: #2563eb;
+}
+
+/* File Upload Section */
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.hidden {
+  display: none;
+}

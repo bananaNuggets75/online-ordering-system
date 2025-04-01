@@ -1,11 +1,17 @@
-
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+
+interface User {
+  uid: string;
+  email: string;
+  role: "admin" | "user";
+  profilePic?: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -23,20 +29,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser: FirebaseUser | null) => {
       setLoading(true);
-      if (currentUser) {
+      if (currentUser && currentUser.email) {
         const userRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userRef);
 
-        if (userSnap.exists() && userSnap.data().role === "admin") {
-          setUser(currentUser);
-          setIsAdmin(true);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            role: userData.role,
+            profilePic: userData.profilePic || "/default-avatar.png",
+          });
+          setIsAdmin(userData.role === "admin");
         } else {
-          await signOut(auth);
-          setUser(null);
-          setIsAdmin(false);
-          router.replace("/admin/login");
+          if (currentUser.email.endsWith("@cpu.edu.ph")) {
+            await setDoc(userRef, { role: "user", profilePic: "/default-avatar.png" });
+            setUser({
+              uid: currentUser.uid,
+              email: currentUser.email,
+              role: "user",
+              profilePic: "/default-avatar.png",
+            });
+            setIsAdmin(false);
+          } else {
+            await signOut(auth);
+            alert("Unauthorized email! Use a @cpu.edu.ph email.");
+            setUser(null);
+            setIsAdmin(false);
+          }
         }
       } else {
         setUser(null);
