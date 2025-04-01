@@ -80,90 +80,81 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-start pb-80"> 
-    <div className="w-[70%] max-w-6xl mx-auto mt-4 p-6 shadow-lg rounded-lg text-black dark:text-white bg-transparent overflow-hidden min-w-[80vh]">
-      <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
-      <div className="flex flex-col items-center">
-        <Image
-          src={profilePic} 
-          alt="Profile Picture"
-          width={30}
-          height={30}
-          className="rounded-full w-40 h-40 object-cover border border-gray-300 dark:border-gray-600"
-        />
-        {isEditing && (
-        <div className="flex flex-col items-center mt-4">
-            <p className="text-gray-600 dark:text-gray-400">
-            {newProfilePic ? newProfilePic.name : "No file chosen"}
-            </p>
-            <label
-            htmlFor="fileUpload"
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 cursor-pointer mt-2"
-            >
-            Choose File
-            </label>
-            <input
-            id="fileUpload"
-            type="file"
-            accept="image/*"
-            onChange={(e) => setNewProfilePic(e.target.files?.[0] || null)}
-            className="hidden"
+    <div className="profile-container">
+      <div className="profile-card">
+        <h2 className="text-center text-3xl">Profile</h2>
+
+        <div className="profile-content">
+          <Image
+              src={profilePic} 
+              alt="Profile Picture"
+              width={160}
+              height={160}
+              className="profile-picture"
             />
+
+          {isEditing && (
+            <div className="file-upload">
+              <p>{newProfilePic ? newProfilePic.name : "No file chosen"}</p>
+              <label htmlFor="fileUpload" className="button button-save">
+                Choose File
+              </label>
+              <input
+                id="fileUpload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setNewProfilePic(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          {isEditing ? (
+            <input
+              type="text"
+              className="profile-input"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+          ) : (
+            <h3 className="text-center">{displayName}</h3>
+          )}
+          
+          <p className="text-center">{email || "No email available"}</p>
         </div>
-        )}
-        {isEditing ? (
-          <input
-            type="text"
-            className="mt-3 text-xl font-semibold text-black dark:text-white text-center border border-gray-300 dark:border-gray-600 p-1 rounded bg-transparent"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
-        ) : (
-          <h3 className="mt-3 text-xl font-semibold">{displayName}</h3>
-        )}
-        <p className="text-gray-600 dark:text-gray-400">{email || "No email available"}</p>
-      </div>
-      <div className="mt-4">
-        <h4 className="font-semibold text-black dark:text-white">Description</h4>
-        {isEditing ? (
-          <textarea
-            className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded text-black dark:text-white bg-transparent"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        ) : (
-          <p className="text-black dark:text-white">{description || "No description provided."}</p>
-        )}
-      </div>
-      <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-        {isEditing ? (
-          <>
-            <button
-              onClick={handleSave}
-              className="bg-green-500 text-white px-5 py-2 rounded-md text-base hover:bg-green-600"
-            >
-              Save
+
+        <div className="description">
+          <h4>Description</h4>
+          {isEditing ? (
+            <textarea
+              className="description-box"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          ) : (
+            <p>{description || "No description provided."}</p>
+          )}
+        </div>
+
+        <div className="profile-buttons">
+          {isEditing ? (
+            <>
+              <button onClick={handleSave} className="button button-save">
+                Save
+              </button>
+              <button onClick={() => setIsEditing(false)} className="button button-cancel">
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setIsEditing(true)} className="button button-edit">
+              Edit Profile
             </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="bg-gray-400 dark:bg-gray-600 text-white px-5 py-2 rounded-md text-base hover:bg-gray-500 dark:hover:bg-gray-700"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="bg-blue-500 text-white px-5 py-2 rounded-md text-base hover:bg-blue-600"
-          >
-            Edit Profile
-          </button>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );
 };
-
 
 export default ProfilePage;
