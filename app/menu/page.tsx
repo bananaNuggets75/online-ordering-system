@@ -182,21 +182,25 @@ const MenuPage: React.FC = () => {
               </button>
             )}
 
-            {selectedItem?.flavors && selectedItem.flavors.length > 0 && (
-              <select
-                value={selectedFlavor}
-                onChange={(e) => setSelectedFlavor(e.target.value)}
-              >
-                <option value="">Select a flavor</option>
-                {selectedItem.flavors.map((flavor: Flavor, index: number) => (
-                  <option key={index} value={flavor.name} disabled={flavor.isOutOfStock}>
-                    {flavor.name} {flavor.isOutOfStock ? "(Out of Stock)" : ""}
+            {selectedItem.flavors && selectedItem.flavors.length > 0 && (
+              <div className="flavor-options mt-4">
+                <h3 className="text-lg font-bold mb-2">Choose a Flavor:</h3>
+                <select
+                  className="border p-2 rounded w-full bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={selectedFlavor || ""}
+                  onChange={(e) => setSelectedFlavor(e.target.value)}
+                >
+                  <option value="" disabled>
+                    Select a flavor
                   </option>
-                ))}
-              </select>
+                  {selectedItem.flavors.map((flavor, index) => (
+                    <option key={index} value={flavor.name} disabled={flavor.isOutOfStock}>
+                      {flavor.name} {flavor.isOutOfStock ? "(Out of Stock)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
-
-
 
             <div className="modal-buttons mt-4">
               <button onClick={handleAddToCart} className="confirm-btn" disabled={selectedItem.isOutOfStock || (selectedItem.options && selectedItem.options.length > 0 && !selectedOption)}>Confirm</button>
