@@ -31,10 +31,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser: FirebaseUser | null) => {
       setLoading(true);
+      
       if (currentUser && currentUser.email) {
         const userRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userRef);
-
+  
         if (userSnap.exists()) {
           const userData = userSnap.data();
           setUser({
@@ -45,32 +46,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
           setIsAdmin(userData.role === "admin");
         } else {
-          if (currentUser.email.endsWith("@cpu.edu.ph")) {
-            await setDoc(userRef, { role: "user", profilePic: "/default-avatar.png" });
-            setUser({
-              uid: currentUser.uid,
-              email: currentUser.email,
-              role: "user",
-              profilePic: "/default-avatar.png",
-            });
-            setIsAdmin(false);
-          } else {
-            await signOut(auth);
-            alert("Unauthorized email! Use a @cpu.edu.ph email.");
-            setUser(null);
-            setIsAdmin(false);
-          }
+          await setDoc(userRef, { role: "user", profilePic: "/default-avatar.png" });
+          setUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            role: "user",
+            profilePic: "/default-avatar.png",
+          });
+          setIsAdmin(false);
         }
       } else {
+        // ✅ User not authenticated, reset state
         setUser(null);
         setIsAdmin(false);
         router.replace("/admin/login");
       }
+      
       setLoading(false);
     });
-
+  
     return () => unsubscribe();
   }, [router]);
+  
 
   const logout = async () => {
     await signOut(auth);
