@@ -2,23 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { Button } from "react-bootstrap";
 import Image from "next/image";
 
 interface MenuItem {
   id: string;
   name: string;
-  description?: string;
+  price: number;
   image?: string;
-  inStock?: boolean;
-  options?: { size: string; price: number }[];
-  flavors?: { name: string; isOutOfStock: boolean }[];
+  inStock: boolean;
 }
 
 const MenuItemsPage = () => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]); // ✅ Initialize as an empty array
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [newItem, setNewItem] = useState({ name: "", price: "", image: "" });
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch menu items
   const fetchMenuItems = async () => {
     setLoading(true);
     try {
@@ -27,10 +29,9 @@ const MenuItemsPage = () => {
         id: doc.id,
         ...(doc.data() as Omit<MenuItem, "id">),
       }));
-      setMenuItems(items || []); // ✅ Ensure items is always an array
+      setMenuItems(items);
     } catch (error) {
       console.error("Error fetching menu items:", error);
-      setMenuItems([]); // ✅ Set empty array on error
     }
     setLoading(false);
   };
@@ -39,69 +40,122 @@ const MenuItemsPage = () => {
     fetchMenuItems();
   }, []);
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Menu Items</h1>
+  // Add or update a menu item
+  const handleSave = async () => {
+    if (!newItem.name || !newItem.price) return;
 
+    try {
+      if (editingItem) {
+        // Update existing item
+        await updateDoc(doc(db, "menu", editingItem.id), {
+          name: newItem.name,
+          price: Number(newItem.price),
+          image: newItem.image || "",
+        });
+      } else {
+        // Add new item
+        await addDoc(collection(db, "menu"), {
+          name: newItem.name,
+          price: Number(newItem.price),
+          image: newItem.image || "",
+          inStock: true,
+        });
+      }
+      fetchMenuItems();
+      setNewItem({ name: "", price: "", image: "" });
+      setEditingItem(null);
+    } catch (error) {
+      console.error("Error saving menu item:", error);
+    }
+  };
+
+  // Delete a menu item
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this item?")) {
+      try {
+        await deleteDoc(doc(db, "menu", id));
+        fetchMenuItems();
+      } catch (error) {
+        console.error("Error deleting menu item:", error);
+      }
+    }
+  };
+
+  // Start editing an item
+  const handleEdit = (item: MenuItem) => {
+    setEditingItem(item);
+    setNewItem({ name: item.name, price: item.price.toString(), image: item.image || "" });
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Manage Menu Items</h1>
+
+      {/* Add/Edit Form */}
+      <div className="mb-4 p-4 border rounded-md bg-gray-50">
+        <input
+          type="text"
+          placeholder="Item Name"
+          value={newItem.name}
+          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+          className="border p-2 w-full mb-2"
+        />
+        <input
+          type="number"
+          placeholder="Price"
+          value={newItem.price}
+          onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+          className="border p-2 w-full mb-2"
+        />
+        <input
+          type="text"
+          placeholder="Image URL"
+          value={newItem.image}
+          onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+          className="border p-2 w-full mb-2"
+        />
+        <Button onClick={handleSave}>{editingItem ? "Update Item" : "Add Item"}</Button>
+      </div>
+
+      {/* Loading Indicator */}
       {loading ? (
         <p>Loading menu items...</p>
-      ) : menuItems.length > 0 ? (
-        <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {menuItems.map((item) => (
-            <li key={item.id} className="border p-4 rounded-lg shadow-md bg-white">
-              {/* Optimized Image */}
+            <div key={item.id} className="p-4 border rounded-md flex flex-col gap-2 bg-white">
+              {/* Image */}
               <div className="relative w-full h-40 overflow-hidden rounded-md">
                 {item.image ? (
-                    <Image
+                  <Image
                     src={item.image}
                     alt={item.name}
-                    width={300} // ✅ Set fixed width
-                    height={160} // ✅ Set fixed height
+                    width={300}
+                    height={160}
                     objectFit="cover"
                     className="w-full h-full rounded-md"
-                    />
+                  />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
                     No Image
-                    </div>
+                  </div>
                 )}
-                </div>
+              </div>
 
-              <h2 className="font-semibold mt-2">{item.name}</h2>
-              <p className="text-sm text-gray-600">{item.description || "No description available."}</p>
+              {/* Info */}
+              <h2 className="text-lg font-semibold">{item.name}</h2>
+              <p className="text-gray-700">${item.price?.toFixed(2) ?? "0.00"}</p>
 
-              {/* Flavors */}
-              {item.flavors && item.flavors.length > 0 && (
-                <div className="mt-2">
-                  <h3 className="text-xs font-semibold text-gray-500">Flavors:</h3>
-                  <ul className="text-sm">
-                    {item.flavors.map((flavor, index) => (
-                      <li key={index} className={flavor.isOutOfStock ? "text-red-500" : ""}>
-                        {flavor.name} {flavor.isOutOfStock ? "(Out of Stock)" : ""}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Options */}
-              {item.options && item.options.length > 0 && (
-                <div className="mt-2">
-                  <h3 className="text-xs font-semibold text-gray-500">Options:</h3>
-                  <ul className="text-sm">
-                    {item.options.map((option, index) => (
-                      <li key={index}>
-                        {option.size} - ${option.price}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </li>
+              {/* Actions */}
+              <div className="flex gap-2 mt-2">
+                <Button onClick={() => handleEdit(item)}>Edit</Button>
+                <Button variant="danger" onClick={() => handleDelete(item.id)}>
+                  Delete
+                </Button>
+              </div>
+            </div>
           ))}
-        </ul>
-      ) : (
-        <p>No menu items available.</p>
+        </div>
       )}
     </div>
   );
