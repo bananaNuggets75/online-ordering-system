@@ -1,6 +1,7 @@
 "use client"; 
 
 import Sidebar from "@/components/SideBar";
+import AdminNavbar from "@/components/AdminNavbar";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -10,15 +11,15 @@ import { usePathname } from "next/navigation";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname(); 
 
-  // Hide sidebar on admin pages and form pages
-  const isHiddenPage = pathname.startsWith("/admin/dashboard") || pathname.startsWith("/forms");
+  // Show Sidebar for Users, Show Navbar for Admins
+  const isAdminPage = pathname.startsWith("/admin");
 
   return (
     <html lang="en">
       <body>
         <AuthProvider> 
           <CartProvider>
-            {!isHiddenPage && <Sidebar />} 
+            {isAdminPage ? <AdminNavbar /> : <Sidebar />}
             {children}
             <Toaster 
               position="top-center"
