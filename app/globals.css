@@ -1855,3 +1855,55 @@ th {
 .hidden {
   display: none;
 }
+
+/* Admin Navbar Styles */
+.admin-navbar {
+  background-color: black; /* Purple background */
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.admin-nav-links {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding-left: 160px;
+}
+
+.admin-nav-links a {
+  text-decoration: none;
+  color: white;
+  transition: color 0.3s ease-in-out;
+}
+
+.admin-nav-links a:hover {
+  color: #ddd;
+}
+
+.admin-logout-container {
+  margin-right: 60px; /* Ensures spacing from the right edge */
+}
+
+.admin-logout {
+  background-color: #e53e3e;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  border: none;
+  color: white;
+}
+
+.admin-logout:hover {
+  background-color: #c53030;
+}
+
