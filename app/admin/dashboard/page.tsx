@@ -137,22 +137,21 @@ const AdminDashboard = () => {
       const orderSnapshot = await getDoc(orderRef);
   
       if (orderSnapshot.exists()) {
-        const updatedItems = orderSnapshot.data().items.map((item: { name: string; isOutOfStock?: boolean }) =>
+        const orderData = orderSnapshot.data();
+        const updatedItems = orderData.items.map((item: { name: string; isOutOfStock?: boolean }) =>
           item.name === itemName ? { ...item, isOutOfStock } : item
         );
   
         await updateDoc(orderRef, { items: updatedItems });
         toast.success("Stock status updated!");
-        fetchOrders(); // ✅ Refresh orders
+      } else {
+        console.error("Order not found!");
       }
     } catch (error) {
       console.error("Error updating stock status:", error);
       toast.error("Failed to update stock status.");
     }
   };
-  
-  
-  
   
 
   const handleCheckboxChange = (orderId: string) => {
@@ -262,7 +261,7 @@ const AdminDashboard = () => {
       <td className={`status-${order.status.toLowerCase().replace(" ", "-")}`}>
         {order.status}
       </td>
-      <td>{new Date(order.updatedAt || "").toLocaleString()}</td>
+      <td>{order.updatedAt ? new Date(order.updatedAt).toLocaleString() : "N/A"}</td>
       <td>
         <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)}>
           <option value="Pending">Pending</option>

@@ -16,6 +16,7 @@ export default function CheckOutPage() {
   const [contact, setContact] = useState("");
   const [deliveryType, setDeliveryType] = useState("Pickup");
   const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function CheckOutPage() {
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const placeOrder = async () => {
+    if (loading) return; // Prevent double submission
     if (cart.length === 0) {
       toast.error("Your cart is empty!");
       return;
@@ -38,25 +40,37 @@ export default function CheckOutPage() {
       router.push("/login");
       return;
     }
-    if (!name || !contact || (deliveryType === "Delivery" && !deliveryLocation)) {
+
+    const trimmedName = name.trim();
+    const trimmedContact = contact.trim();
+    const trimmedLocation = deliveryLocation.trim();
+
+    if (!trimmedName || !trimmedContact || (deliveryType === "Delivery" && !trimmedLocation)) {
       toast.error("Please fill in all required fields.");
       return;
     }
 
+    if (trimmedContact.length < 10) {
+      toast.error("Please enter a valid contact number.");
+      return;
+    }
+  
+    setLoading(true); // Disable button during request
+  
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
         userId: user.uid,
         customerInfo: {
-          name,
-          contact,
+          name: trimmedName,
+          contact: trimmedContact,
           deliveryType,
-          deliveryLocation: deliveryType === "Delivery" ? deliveryLocation : "",
+          deliveryLocation: deliveryType === "Delivery" ? trimmedLocation : "",
         },
         items: cart.map((item) => ({
           id: item.id,
           name: item.name,
           size: item.size,
-          flavor: item.flavor,
+          flavor: item.flavor || "No Flavor", // Ensure it's never undefined
           price: item.price,
           quantity: item.quantity,
           image: item.image,
@@ -64,7 +78,7 @@ export default function CheckOutPage() {
         status: "Received",
         timestamp: serverTimestamp(),
       });
-
+  
       sessionStorage.setItem("orderId", orderRef.id);
       clearCart();
       toast.success("Order Placed!");
@@ -72,9 +86,11 @@ export default function CheckOutPage() {
     } catch (error) {
       toast.error("Failed to place order");
       console.error("Order error:", error);
+    } finally {
+      setLoading(false); // Re-enable button
     }
   };
-
+  
   return (
     <div className="cart-container">
       {cart.length === 0 ? (
@@ -89,22 +105,26 @@ export default function CheckOutPage() {
       {cart.length > 0 && (
         <div className="cart-list">
           {cart.map((item) => (
-            <div key={`${item.id}-${item.size}-${item.flavor}`} className="cart-item">
-              <div>
-                <h2>
-                  {item.name} {item.size ? `(${item.size})` : ""} 
-                  {item.flavor ? ` - ${item.flavor}` : ""}
-                </h2> 
-                <p>₱{item.price.toFixed(2)} x {item.quantity}</p>
-              </div>
-              <button 
-                className="remove-btn"
-                onClick={() => removeFromCart(item.id, item.size, item.flavor ?? "No Flavor")}
-              >
-                Remove
-              </button>
+          <div 
+            key={`${item.id}-${item.size || "default"}-${item.flavor || "default"}`} 
+            className="cart-item"
+          >
+            <div>
+              <h2>
+                {item.name} {item.size ? `(${item.size})` : ""} 
+                {item.flavor ? ` - ${item.flavor}` : ""}
+              </h2> 
+              <p>₱{item.price.toFixed(2)} x {item.quantity}</p>
             </div>
-          ))}
+            <button 
+              className="remove-btn"
+              onClick={() => removeFromCart(item.id, item.size, item.flavor ?? "No Flavor")}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+
 
           {/* Delivery Details Form */}
           <div className="mt-4">
@@ -124,7 +144,10 @@ export default function CheckOutPage() {
               <input 
                 type="text" 
                 value={contact} 
-                onChange={(e) => setContact(e.target.value)}
+                onChange={(e) => {
+                  const validNumber = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+                  setContact(validNumber);
+                }}
                 className="input-field" 
                 required 
               />
@@ -161,8 +184,8 @@ export default function CheckOutPage() {
               <button className="clear-cart-btn" onClick={clearCart}>
                 Clear Cart
               </button>
-              <button className="checkout-btn" onClick={placeOrder}>
-                Place Order
+              <button className="checkout-btn" onClick={placeOrder} disabled={loading}>
+                {loading ? "Placing Order..." : "Place Order"}
               </button>
             </div>
           </div>

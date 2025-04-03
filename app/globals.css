@@ -449,10 +449,9 @@ body {
   cursor: pointer;
   top: 15px;
   left: 15px;
-  z-index: 1000;
+  z-index: 1100;
   color: var(--primary);
   padding: 8px;
-  z-index: 1100;
 }
 
 .sidebar {
@@ -467,6 +466,9 @@ body {
   padding-top: 60px;
   z-index: 1000;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Pushes logout button to bottom */
 }
 
 .sidebar.open {
@@ -498,6 +500,32 @@ body {
   display: block;
   transition: color 0.2s, transform 0.2s;
 }
+
+.sidebar-footer {
+  position: absolute;
+  bottom: 100px; 
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.logout-btn {
+  background: red;
+  color: white;
+  padding: 12px 40px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.logout-btn:hover {
+  background: darkred;
+  transform: scale(1.05);
+}
+
 
 /* Improved sidebar contrast in dark mode */
 @media (prefers-color-scheme: dark) {
@@ -537,11 +565,11 @@ body {
   }
 }
 
-
 .sidebar ul li a:hover {
   color: var(--primary);
   transform: translateX(5px);
 }
+
 
 /* ========== Close Button ========== */
 .close-btn {
@@ -1827,3 +1855,55 @@ th {
 .hidden {
   display: none;
 }
+
+/* Admin Navbar Styles */
+.admin-navbar {
+  background-color: black; /* Purple background */
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.admin-nav-links {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding-left: 160px;
+}
+
+.admin-nav-links a {
+  text-decoration: none;
+  color: white;
+  transition: color 0.3s ease-in-out;
+}
+
+.admin-nav-links a:hover {
+  color: #ddd;
+}
+
+.admin-logout-container {
+  margin-right: 60px; /* Ensures spacing from the right edge */
+}
+
+.admin-logout {
+  background-color: #e53e3e;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  border: none;
+  color: white;
+}
+
+.admin-logout:hover {
+  background-color: #c53030;
+}
+

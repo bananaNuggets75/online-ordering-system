@@ -7,12 +7,18 @@ import Image from "next/image";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, DocumentData } from "firebase/firestore";
 
+
 // --- Interfaces ---
 interface Option {
   size: string;
   price: number;
   isOutOfStock?: boolean;
 }
+
+type Flavor = {
+  name: string;
+  isOutOfStock: boolean;
+};
 
 interface MenuItem {
   id: string;
@@ -21,9 +27,11 @@ interface MenuItem {
   price?: number;
   isOutOfStock?: boolean;
   image: string;
+  isAvailable: boolean;
   options?: Option[];
-  flavors?: string[];
+  flavors?: Flavor[];
 }
+
 
 // --- Component ---
 const MenuPage: React.FC = () => {
@@ -33,37 +41,42 @@ const MenuPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedOption, setSelectedOption] = useState<Option | null>(null);
   const [selectedFlavor, setSelectedFlavor] = useState<string>("");
+  
 
-  // ✅ Real-time fetch from Firebase
+  // ✅ Real-time fetch from Firebase with error handling
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "menu"), (snapshot) => {
-      const items = snapshot.docs.map((doc) => {
-        const data = doc.data() as DocumentData;
-        return {
-          id: doc.id,
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          isOutOfStock: data.isAvailable === false, // Handle availability
-          image: data.image,
-          options: data.options || [],
-          flavors: data.flavors || [],
-        } as MenuItem;
-      });
-      setMenuItems(items);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, "menu"),
+      (snapshot) => {
+        const items = snapshot.docs.map((doc) => {
+          const data = doc.data() as DocumentData;
+          return {
+            id: doc.id,
+            name: data.name || "Unnamed Item",
+            description: data.description || "No description available",
+            price: data.price ?? 0,
+            isOutOfStock: data.isAvailable !== undefined ? !data.isAvailable : false,
+            image: data.image || "/placeholder.png",
+            options: data.options || [],
+            flavors: data.flavors || [],
+          } as MenuItem;
+        });
+        setMenuItems(items);
+      },
+      (error) => {
+        console.error("Error fetching menu:", error);
+        toast.error("Failed to load menu items!");
+      }
+    );
 
     return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
-  // ✅ Handle Add to Cart
+  // ✅ Handle Add to Cart with required field checks
   const handleAddToCart = () => {
     if (!selectedItem) return;
 
-    const isItemOutOfStock =
-      selectedItem.isOutOfStock ||
-      (selectedOption && selectedOption.isOutOfStock);
-
+    const isItemOutOfStock = selectedItem.isOutOfStock || (selectedOption && selectedOption.isOutOfStock);
     if (isItemOutOfStock) {
       toast.error("This item is out of stock!");
       return;
@@ -80,7 +93,6 @@ const MenuPage: React.FC = () => {
     });
 
     toast.success(`${selectedItem.name} added to cart!`);
-    // Reset selections
     setSelectedItem(null);
     setSelectedOption(null);
     setSelectedFlavor("");
@@ -93,18 +105,16 @@ const MenuPage: React.FC = () => {
       <div className="menu-list">
         {menuItems.map((item) => (
           <div key={item.id} className={`menu-item ${item.isOutOfStock ? "out-of-stock" : ""}`}>
-            {/* ✅ Disable click when out of stock */}
             <div
               onClick={() => {
                 if (!item.isOutOfStock) {
                   router.push(`/menu/${item.id}`);
+                } else {
+                  toast.error(`${item.name} is out of stock!`);
                 }
               }}
-              className={`cursor-pointer ${
-                item.isOutOfStock ? "pointer-events-none opacity-50" : ""
-              }`}
+              className={`cursor-pointer ${item.isOutOfStock ? "pointer-events-none opacity-50" : ""}`}
             >
-              {/* ✅ Fix Image */}
               <Image
                 src={item.image || "/placeholder.png"}
                 alt={item.name}
@@ -118,12 +128,7 @@ const MenuPage: React.FC = () => {
                 <p className="menu-item-description">{item.description}</p>
               </div>
 
-              {/* ✅ Out of Stock Badge */}
-              {item.isOutOfStock && (
-                <div className="out-of-stock-badge">
-                  Out of Stock
-                </div>
-              )}
+              {item.isOutOfStock && <div className="out-of-stock-badge">Out of Stock</div>}
             </div>
 
             <button
@@ -146,22 +151,18 @@ const MenuPage: React.FC = () => {
         ))}
       </div>
 
-       {/* Modal for Selecting Options & Flavors */}
-       {selectedItem && (
+      {selectedItem && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h2 className="text-xl font-bold mb-4">{selectedItem.name}</h2>
             <p className="text-gray-600 mb-2">{selectedItem.description}</p>
 
-            {/* Show options as selectable cards */}
             {selectedItem.options && selectedItem.options.length > 0 ? (
               <div className="options-grid">
                 {selectedItem.options.map((option, index) => (
                   <button
                     key={index}
-                    className={`option-card ${selectedOption?.size === option.size ? "selected" : ""} ${
-                      option.isOutOfStock ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`option-card ${selectedOption?.size === option.size ? "selected" : ""} ${option.isOutOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
                     onClick={() => {
                       if (!option.isOutOfStock) setSelectedOption(option);
                     }}
@@ -175,26 +176,26 @@ const MenuPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              // No options (e.g., Chewy Soda)
               <button className="option-card" onClick={handleAddToCart} disabled={selectedItem.isOutOfStock}>
                 <Image src={selectedItem.image} alt={selectedItem.name} width={100} height={100} />
                 <p>₱{selectedItem.price}</p>
               </button>
             )}
 
-            {/* Flavor Selection */}
             {selectedItem.flavors && selectedItem.flavors.length > 0 && (
               <div className="flavor-options mt-4">
-                <h3 className="text-lg font-bold">Choose a Flavor:</h3>
+                <h3 className="text-lg font-bold mb-2">Choose a Flavor:</h3>
                 <select
-                  className="border p-2 rounded w-full"
+                  className="border p-2 rounded w-full bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   value={selectedFlavor || ""}
                   onChange={(e) => setSelectedFlavor(e.target.value)}
                 >
-                  <option value="">Select a flavor</option>
+                  <option value="" disabled>
+                    Select a flavor
+                  </option>
                   {selectedItem.flavors.map((flavor, index) => (
-                    <option key={index} value={flavor}>
-                      {flavor}
+                    <option key={index} value={flavor.name} disabled={flavor.isOutOfStock}>
+                      {flavor.name} {flavor.isOutOfStock ? "(Out of Stock)" : ""}
                     </option>
                   ))}
                 </select>
@@ -202,19 +203,8 @@ const MenuPage: React.FC = () => {
             )}
 
             <div className="modal-buttons mt-4">
-              {/* "Confirm" button to add item to cart */}
-              <button
-                onClick={handleAddToCart}
-                className="confirm-btn"
-                disabled={selectedItem.isOutOfStock || (selectedItem.options && !selectedOption)}
-              >
-                Confirm
-              </button>
-
-              {/* Cancel Button */}
-              <button className="cancel-btn" onClick={() => setSelectedItem(null)}>
-                Cancel
-              </button>
+              <button onClick={handleAddToCart} className="confirm-btn" disabled={selectedItem.isOutOfStock || (selectedItem.options && selectedItem.options.length > 0 && !selectedOption)}>Confirm</button>
+              <button className="cancel-btn" onClick={() => setSelectedItem(null)}>Cancel</button>
             </div>
           </div>
         </div>
