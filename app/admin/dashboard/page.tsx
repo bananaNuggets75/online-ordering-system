@@ -65,7 +65,7 @@ const AdminDashboard = () => {
         const data = doc.data();
         const items = data.items || []; // 🔹 Get items array from Firestore
   
-        // ✅ Compute total price by multiplying each item's price and quantity
+        // Compute total price by multiplying each item's price and quantity
         const totalPrice = items.reduce((sum: number, item: { price: number; quantity: number }) => {
           return sum + (item.price * item.quantity);
         }, 0);
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
         playNotificationSound();
       }
 
-      // ✅ Compute total revenue
+      // Compute total revenue
       const computedTotalRevenue = updatedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
     setOrders(updatedOrders);
@@ -189,7 +189,7 @@ const AdminDashboard = () => {
     <div className="admin-dashboard-container">
       <h1 className="admin-title">Admin Dashboard</h1>
   
-      {/* ✅ Total Revenue moved outside table */}
+      {/* Total Revenue moved outside table */}
       <div className="total-revenue text-xl font-bold text-gray-800 mt-4">
         Total Revenue: <span className="text-green-600">₱{totalRevenue.toFixed(2)}</span>
       </div>
