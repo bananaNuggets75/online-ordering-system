@@ -56,17 +56,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setIsAdmin(false);
         }
       } else {
-        // ✅ User not authenticated, reset state
         setUser(null);
         setIsAdmin(false);
-        router.replace("/admin/login");
       }
-      
+  
       setLoading(false);
     });
   
     return () => unsubscribe();
-  }, [router]);
+  }, []);
+  
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/admin/login");
+    }
+  }, [loading, user, router]);
+  
   
 
   const logout = async () => {
