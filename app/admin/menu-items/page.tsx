@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { onAuthStateChanged, } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import { Button } from "react-bootstrap";
 import Image from "next/image";
 
@@ -14,11 +16,28 @@ interface MenuItem {
   inStock: boolean;
 }
 
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
+
 const MenuItemsPage = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [newItem, setNewItem] = useState({ name: "", price: "", image: "" });
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
+
+  // 🔐 Admin authentication check
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser || currentUser.uid !== ADMIN_UID) {
+        router.replace("/admin/login"); // Redirect non-admins
+      } else {
+        setAuthChecked(true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   // Fetch menu items
   const fetchMenuItems = async () => {
@@ -37,8 +56,10 @@ const MenuItemsPage = () => {
   };
 
   useEffect(() => {
-    fetchMenuItems();
-  }, []);
+    if (authChecked) {
+      fetchMenuItems();
+    }
+  }, [authChecked]);
 
   // Add or update a menu item
   const handleSave = async () => {
@@ -46,14 +67,12 @@ const MenuItemsPage = () => {
 
     try {
       if (editingItem) {
-        // Update existing item
         await updateDoc(doc(db, "menu", editingItem.id), {
           name: newItem.name,
           price: Number(newItem.price),
           image: newItem.image || "",
         });
       } else {
-        // Add new item
         await addDoc(collection(db, "menu"), {
           name: newItem.name,
           price: Number(newItem.price),
@@ -86,6 +105,8 @@ const MenuItemsPage = () => {
     setEditingItem(item);
     setNewItem({ name: item.name, price: item.price.toString(), image: item.image || "" });
   };
+
+  if (!authChecked) return <p>Loading...</p>; // Prevent rendering until authentication is confirmed
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -124,7 +145,6 @@ const MenuItemsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {menuItems.map((item) => (
             <div key={item.id} className="p-4 border rounded-md flex flex-col gap-2 bg-white">
-              {/* Image */}
               <div className="relative w-full h-40 overflow-hidden rounded-md">
                 {item.image ? (
                   <Image
@@ -142,11 +162,9 @@ const MenuItemsPage = () => {
                 )}
               </div>
 
-              {/* Info */}
               <h2 className="text-lg font-semibold">{item.name}</h2>
               <p className="text-gray-700">${item.price?.toFixed(2) ?? "0.00"}</p>
 
-              {/* Actions */}
               <div className="flex gap-2 mt-2">
                 <Button onClick={() => handleEdit(item)}>Edit</Button>
                 <Button variant="danger" onClick={() => handleDelete(item.id)}>
