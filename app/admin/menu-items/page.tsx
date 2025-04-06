@@ -129,15 +129,16 @@ const MenuItemsPage = () => {
   if (!authChecked) return <p>Loading...</p>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Manage Menu Items</h1>
-
-      {/* Add/Edit Form */}
-      <Button className="mb-4" onClick={handleAddNew}>Add New Item</Button>
-
+    <div className="menu-items-page p-6 max-w-4xl mx-auto">
+      <h1 className="page-title text-2xl font-bold mb-4">Manage Menu Items</h1>
+  
+      <Button className="add-item-btn mb-4" onClick={handleAddNew}>Add New Item</Button>
+  
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</Modal.Title>
+          <Modal.Title>
+            {editingItem ? "Edit Menu Item" : "Add New Menu Item"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <input
@@ -145,18 +146,18 @@ const MenuItemsPage = () => {
             placeholder="Item Name"
             value={newItem.name}
             onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-            className="form-control mb-2"
+            className="form-control mb-2 item-name-input"
           />
           <input
             type="text"
             placeholder="Image URL"
             value={newItem.image}
             onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
-            className="form-control mb-2"
+            className="form-control mb-2 item-image-input"
           />
-
+  
           {newItem.options.map((option, index) => (
-            <div key={index} className="d-flex gap-2 mb-2">
+            <div key={index} className="option-row d-flex gap-2 mb-2">
               <input
                 type="text"
                 placeholder="Size"
@@ -166,7 +167,7 @@ const MenuItemsPage = () => {
                   updatedOptions[index].size = e.target.value;
                   setNewItem({ ...newItem, options: updatedOptions });
                 }}
-                className="form-control w-50"
+                className="form-control w-50 option-size-input"
               />
               <input
                 type="number"
@@ -177,11 +178,11 @@ const MenuItemsPage = () => {
                   updatedOptions[index].price = Number(e.target.value);
                   setNewItem({ ...newItem, options: updatedOptions });
                 }}
-                className="form-control w-50"
+                className="form-control w-50 option-price-input"
               />
               <button
                 type="button"
-                className="btn btn-sm btn-danger"
+                className="btn btn-sm btn-danger remove-option-btn"
                 onClick={() => {
                   const updatedOptions = newItem.options.filter((_, idx) => idx !== index);
                   setNewItem({ ...newItem, options: updatedOptions });
@@ -191,10 +192,13 @@ const MenuItemsPage = () => {
               </button>
             </div>
           ))}
+  
           <button
             type="button"
-            className="btn btn-sm btn-secondary mb-3"
-            onClick={() => setNewItem({ ...newItem, options: [...newItem.options, { size: "", price: 0 }] })}
+            className="btn btn-sm btn-secondary mb-3 add-option-btn"
+            onClick={() =>
+              setNewItem({ ...newItem, options: [...newItem.options, { size: "", price: 0 }] })
+            }
           >
             Add Option
           </button>
@@ -208,16 +212,14 @@ const MenuItemsPage = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-
-
-      {/* Loading Indicator */}
+  
       {loading ? (
-        <p>Loading menu items...</p>
+        <p className="loading-text">Loading menu items...</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="menu-items-grid grid grid-cols-1 md:grid-cols-2 gap-4">
           {menuItems.map((item) => (
-            <div key={item.id} className="p-4 border rounded-md flex flex-col gap-2 bg-white">
-              <div className="relative w-full h-40 overflow-hidden rounded-md">
+            <div key={item.id} className="menu-card p-4 border rounded-md flex flex-col gap-2 bg-white">
+              <div className="menu-card-image relative w-full h-40 overflow-hidden rounded-md">
                 {item.image ? (
                   <Image
                     src={item.image}
@@ -228,41 +230,42 @@ const MenuItemsPage = () => {
                     className="w-full h-full rounded-md"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+                  <div className="no-image-placeholder w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
                     No Image
                   </div>
                 )}
-                
               </div>
-
-              <h2 className="text-lg font-semibold">{item.name}</h2>
-              <div className="text-gray-700">
-              {Array.isArray(item.options) && item.options.length > 0 ? (
-                item.options.map((option, idx) => (
-                  <p key={idx}>
-                    {option.size}: ${option.price.toFixed(2)}
-                  </p>
-                ))
-              ) : item.price !== undefined ? (
-                <p>Price: ${item.price.toFixed(2)}</p>
-              ) : (
-                <p className="text-sm text-gray-500 italic">No options available</p>
-              )}
-              {item.flavors && item.flavors.length > 0 && (
-              <div>
-                <p className="font-medium">Flavors:</p>
-                <ul className="list-disc list-inside text-sm text-gray-700">
-                  {item.flavors.map((flavor, idx) => (
-                    <li key={idx} className={flavor.isOutOfStock ? "line-through text-red-500" : ""}>
-                      {flavor.name} {flavor.isOutOfStock && "(Out of Stock)"}
-                    </li>
-                  ))}
-                </ul>
+  
+              <h2 className="item-title text-lg font-semibold">{item.name}</h2>
+  
+              <div className="item-options text-gray-700">
+                {Array.isArray(item.options) && item.options.length > 0 ? (
+                  item.options.map((option, idx) => (
+                    <p key={idx} className="option-entry">
+                      {option.size}: ${option.price.toFixed(2)}
+                    </p>
+                  ))
+                ) : item.price !== undefined ? (
+                  <p className="option-price">Price: ${item.price.toFixed(2)}</p>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No options available</p>
+                )}
+  
+                {item.flavors && item.flavors.length > 0 && (
+                  <div className="item-flavors mt-2">
+                    <p className="font-medium">Flavors:</p>
+                    <ul className="list-disc list-inside text-sm text-gray-700">
+                      {item.flavors.map((flavor, idx) => (
+                        <li key={idx} className={flavor.isOutOfStock ? "line-through text-red-500" : ""}>
+                          {flavor.name} {flavor.isOutOfStock && "(Out of Stock)"}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            )}
-              </div>
-
-              <div className="flex gap-2 mt-2">
+  
+              <div className="menu-actions flex gap-2 mt-2">
                 <Button onClick={() => handleEdit(item)}>Edit</Button>
                 <Button variant="danger" onClick={() => handleDelete(item.id)}>
                   Delete
@@ -273,7 +276,7 @@ const MenuItemsPage = () => {
         </div>
       )}
     </div>
-  );
+  );  
 };
 
 export default MenuItemsPage;
