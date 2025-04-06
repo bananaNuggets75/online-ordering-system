@@ -2046,7 +2046,6 @@ th {
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
-
 /* Button Styles */
 button {
   background-color: var(--button-bg);
@@ -2096,16 +2095,6 @@ button:disabled {
 
 .remove-option-btn:hover {
   background-color: #c82333;
-}
-
-.add-option-btn {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-}
-
-.add-option-btn:hover {
-  background-color: #5a6268;
 }
 
 /* Center the modal */

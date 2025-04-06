@@ -121,10 +121,6 @@ const MenuItemsPage = () => {
     setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
     setShowModal(true);
   };
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
-  };
 
   if (!authChecked) return <p>Loading...</p>;
 
@@ -133,6 +129,12 @@ const MenuItemsPage = () => {
       <h1 className="page-title text-2xl font-bold mb-4">Manage Menu Items</h1>
   
       <Button className="add-item-btn mb-4" onClick={handleAddNew}>Add New Item</Button>
+
+       {/* Overlay */}
+    {showModal && (
+      <div className="modal-overlay" onClick={() => setShowModal(false)}></div>
+    )}
+
   
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
