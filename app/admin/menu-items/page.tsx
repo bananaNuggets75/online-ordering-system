@@ -16,6 +16,7 @@ interface MenuItem {
   isAvailable: boolean;
   options: { size: string; price: number }[];
   flavors: { name: string; isOutOfStock: boolean }[];
+  price?: number; // or maybe just add an option array for chewy soda also
 }
 
 const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
@@ -212,15 +213,17 @@ const MenuItemsPage = () => {
 
               <h2 className="text-lg font-semibold">{item.name}</h2>
               <div className="text-gray-700">
-                {Array.isArray(item.options) && item.options.length > 0 ? (
-                  item.options.map((option, idx) => (
-                    <p key={idx}>
-                      {option.size}: ${option.price.toFixed(2)}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 italic">No options available</p>
-                )}
+              {Array.isArray(item.options) && item.options.length > 0 ? (
+                item.options.map((option, idx) => (
+                  <p key={idx}>
+                    {option.size}: ${option.price.toFixed(2)}
+                  </p>
+                ))
+              ) : item.price !== undefined ? (
+                <p>Price: ${item.price.toFixed(2)}</p>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No options available</p>
+              )}
               </div>
 
               <div className="flex gap-2 mt-2">
