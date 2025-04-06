@@ -5,7 +5,7 @@ import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import Image from "next/image";
 
 interface MenuItem {
@@ -27,6 +27,7 @@ const MenuItemsPage = () => {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const router = useRouter();
 
   // Admin authentication check
@@ -112,6 +113,17 @@ const MenuItemsPage = () => {
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item);
     setNewItem({ name: item.name, image: item.image || "", options: item.options });
+    setShowModal(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingItem(null);
+    setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
+    setShowModal(true);
+  };
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
   };
 
   if (!authChecked) return <p>Loading...</p>;
@@ -121,26 +133,30 @@ const MenuItemsPage = () => {
       <h1 className="text-2xl font-bold mb-4">Manage Menu Items</h1>
 
       {/* Add/Edit Form */}
-      <div className="mb-4 p-4 border rounded-md bg-gray-50">
-        <input
-          type="text"
-          placeholder="Item Name"
-          value={newItem.name}
-          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-          className="border p-2 w-full mb-2"
-        />
-        <input
-          type="text"
-          placeholder="Image URL"
-          value={newItem.image}
-          onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
-          className="border p-2 w-full mb-2"
-        />
+      <Button className="mb-4" onClick={handleAddNew}>Add New Item</Button>
 
-        {/* Options Section */}
-        <div className="mb-2">
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <input
+            type="text"
+            placeholder="Item Name"
+            value={newItem.name}
+            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+            className="form-control mb-2"
+          />
+          <input
+            type="text"
+            placeholder="Image URL"
+            value={newItem.image}
+            onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+            className="form-control mb-2"
+          />
+
           {newItem.options.map((option, index) => (
-            <div key={index} className="flex gap-2 mb-2">
+            <div key={index} className="d-flex gap-2 mb-2">
               <input
                 type="text"
                 placeholder="Size"
@@ -150,7 +166,7 @@ const MenuItemsPage = () => {
                   updatedOptions[index].size = e.target.value;
                   setNewItem({ ...newItem, options: updatedOptions });
                 }}
-                className="border p-2 w-32"
+                className="form-control w-50"
               />
               <input
                 type="number"
@@ -161,31 +177,38 @@ const MenuItemsPage = () => {
                   updatedOptions[index].price = Number(e.target.value);
                   setNewItem({ ...newItem, options: updatedOptions });
                 }}
-                className="border p-2 w-32"
+                className="form-control w-50"
               />
               <button
                 type="button"
+                className="btn btn-sm btn-danger"
                 onClick={() => {
                   const updatedOptions = newItem.options.filter((_, idx) => idx !== index);
                   setNewItem({ ...newItem, options: updatedOptions });
                 }}
-                className="text-red-600"
               >
-                Remove
+                ×
               </button>
             </div>
           ))}
           <button
             type="button"
+            className="btn btn-sm btn-secondary mb-3"
             onClick={() => setNewItem({ ...newItem, options: [...newItem.options, { size: "", price: 0 }] })}
-            className="text-blue-600"
           >
             Add Option
           </button>
-        </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={() => { handleSave(); setShowModal(false); }}>
+            {editingItem ? "Update" : "Add"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-        <Button onClick={handleSave}>{editingItem ? "Update Item" : "Add Item"}</Button>
-      </div>
 
       {/* Loading Indicator */}
       {loading ? (
