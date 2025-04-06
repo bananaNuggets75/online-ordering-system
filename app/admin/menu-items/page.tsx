@@ -209,6 +209,7 @@ const MenuItemsPage = () => {
                     No Image
                   </div>
                 )}
+                
               </div>
 
               <h2 className="text-lg font-semibold">{item.name}</h2>
@@ -224,6 +225,18 @@ const MenuItemsPage = () => {
               ) : (
                 <p className="text-sm text-gray-500 italic">No options available</p>
               )}
+              {item.flavors && item.flavors.length > 0 && (
+              <div>
+                <p className="font-medium">Flavors:</p>
+                <ul className="list-disc list-inside text-sm text-gray-700">
+                  {item.flavors.map((flavor, idx) => (
+                    <li key={idx} className={flavor.isOutOfStock ? "line-through text-red-500" : ""}>
+                      {flavor.name} {flavor.isOutOfStock && "(Out of Stock)"}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
               </div>
 
               <div className="flex gap-2 mt-2">
