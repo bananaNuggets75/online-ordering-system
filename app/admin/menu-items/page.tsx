@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { onAuthStateChanged, } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Button } from "react-bootstrap";
 import Image from "next/image";
@@ -11,26 +11,28 @@ import Image from "next/image";
 interface MenuItem {
   id: string;
   name: string;
-  price: number;
-  image?: string;
+  image: string;
   inStock: boolean;
+  isAvailable: boolean;
+  options: { size: string; price: number }[];
+  flavors: { name: string; isOutOfStock: boolean }[];
 }
 
 const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 const MenuItemsPage = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [newItem, setNewItem] = useState({ name: "", price: "", image: "" });
+  const [newItem, setNewItem] = useState({ name: "", image: "", options: [{ size: "", price: 0 }] });
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
 
-  // 🔐 Admin authentication check
+  // Admin authentication check
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser || currentUser.uid !== ADMIN_UID) {
-        router.replace("/admin/login"); // Redirect non-admins
+        router.replace("/admin/login");
       } else {
         setAuthChecked(true);
       }
@@ -39,15 +41,23 @@ const MenuItemsPage = () => {
     return () => unsubscribe();
   }, [router]);
 
-  // Fetch menu items
+  // Fetch and normalize menu items
   const fetchMenuItems = async () => {
     setLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, "menu"));
-      const items: MenuItem[] = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<MenuItem, "id">),
-      }));
+      const items: MenuItem[] = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as Partial<MenuItem>;
+        return {
+          id: doc.id,
+          name: data.name || "Unnamed Item",
+          image: data.image || "",
+          inStock: data.inStock ?? true,
+          isAvailable: data.isAvailable ?? true,
+          options: Array.isArray(data.options) ? data.options : [],
+          flavors: Array.isArray(data.flavors) ? data.flavors : [],
+        };
+      });
       setMenuItems(items);
     } catch (error) {
       console.error("Error fetching menu items:", error);
@@ -61,34 +71,32 @@ const MenuItemsPage = () => {
     }
   }, [authChecked]);
 
-  // Add or update a menu item
   const handleSave = async () => {
-    if (!newItem.name || !newItem.price) return;
+    if (!newItem.name || newItem.options.length === 0) return;
 
     try {
       if (editingItem) {
         await updateDoc(doc(db, "menu", editingItem.id), {
           name: newItem.name,
-          price: Number(newItem.price),
           image: newItem.image || "",
+          options: newItem.options,
         });
       } else {
         await addDoc(collection(db, "menu"), {
           name: newItem.name,
-          price: Number(newItem.price),
           image: newItem.image || "",
+          options: newItem.options,
           inStock: true,
         });
       }
       fetchMenuItems();
-      setNewItem({ name: "", price: "", image: "" });
+      setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
       setEditingItem(null);
     } catch (error) {
       console.error("Error saving menu item:", error);
     }
   };
 
-  // Delete a menu item
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this item?")) {
       try {
@@ -100,13 +108,12 @@ const MenuItemsPage = () => {
     }
   };
 
-  // Start editing an item
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item);
-    setNewItem({ name: item.name, price: item.price.toString(), image: item.image || "" });
+    setNewItem({ name: item.name, image: item.image || "", options: item.options });
   };
 
-  if (!authChecked) return <p>Loading...</p>; // Prevent rendering until authentication is confirmed
+  if (!authChecked) return <p>Loading...</p>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -122,19 +129,60 @@ const MenuItemsPage = () => {
           className="border p-2 w-full mb-2"
         />
         <input
-          type="number"
-          placeholder="Price"
-          value={newItem.price}
-          onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-          className="border p-2 w-full mb-2"
-        />
-        <input
           type="text"
           placeholder="Image URL"
           value={newItem.image}
           onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
           className="border p-2 w-full mb-2"
         />
+
+        {/* Options Section */}
+        <div className="mb-2">
+          {newItem.options.map((option, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Size"
+                value={option.size}
+                onChange={(e) => {
+                  const updatedOptions = [...newItem.options];
+                  updatedOptions[index].size = e.target.value;
+                  setNewItem({ ...newItem, options: updatedOptions });
+                }}
+                className="border p-2 w-32"
+              />
+              <input
+                type="number"
+                placeholder="Price"
+                value={option.price}
+                onChange={(e) => {
+                  const updatedOptions = [...newItem.options];
+                  updatedOptions[index].price = Number(e.target.value);
+                  setNewItem({ ...newItem, options: updatedOptions });
+                }}
+                className="border p-2 w-32"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const updatedOptions = newItem.options.filter((_, idx) => idx !== index);
+                  setNewItem({ ...newItem, options: updatedOptions });
+                }}
+                className="text-red-600"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setNewItem({ ...newItem, options: [...newItem.options, { size: "", price: 0 }] })}
+            className="text-blue-600"
+          >
+            Add Option
+          </button>
+        </div>
+
         <Button onClick={handleSave}>{editingItem ? "Update Item" : "Add Item"}</Button>
       </div>
 
@@ -163,7 +211,17 @@ const MenuItemsPage = () => {
               </div>
 
               <h2 className="text-lg font-semibold">{item.name}</h2>
-              <p className="text-gray-700">${item.price?.toFixed(2) ?? "0.00"}</p>
+              <div className="text-gray-700">
+                {Array.isArray(item.options) && item.options.length > 0 ? (
+                  item.options.map((option, idx) => (
+                    <p key={idx}>
+                      {option.size}: ${option.price.toFixed(2)}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No options available</p>
+                )}
+              </div>
 
               <div className="flex gap-2 mt-2">
                 <Button onClick={() => handleEdit(item)}>Edit</Button>
