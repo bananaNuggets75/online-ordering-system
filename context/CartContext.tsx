@@ -4,13 +4,13 @@ import { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 type CartItem = {
-  id: string; // ✅ Changed from number to string (to match Firestore IDs)
+  id: string; 
   name: string;
   size: string;
   price: number;
   quantity: number;
   image: string;
-  flavor?: string; // ✅ Made flavor optional
+  flavor?: string; 
 };
 
 interface CartContextType {
@@ -26,21 +26,21 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
-  // ✅ Load cart from local storage on mount
+  // Load cart from local storage on mount
   useEffect(() => {
     setMounted(true);
     const savedCart = localStorage.getItem("cart");
     if (savedCart) setCart(JSON.parse(savedCart));
   }, []);
 
-  // ✅ Sync cart to local storage
+  // Sync cart to local storage
   useEffect(() => {
     if (mounted) {
       localStorage.setItem("cart", JSON.stringify(cart));
     }
   }, [cart, mounted]);
 
-  // ✅ Add to cart (size + flavor-based)
+  // Add to cart (size + flavor-based)
   const addToCart = (item: CartItem) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find(
@@ -66,7 +66,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     toast.success(`${item.name} (${item.size}) added to cart!`);
   };
 
-  // ✅ Remove from cart (based on size + flavor)
+  // Remove from cart (based on size + flavor)
   const removeFromCart = (id: string, size: string, flavor?: string) => {
     setCart((prevCart) =>
       prevCart.filter(
@@ -77,7 +77,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     toast.success("Item removed from cart.");
   };
 
-  // ✅ Clear cart
+  // Clear cart
   const clearCart = () => {
     setCart([]);
     toast.success("Cart cleared!");
@@ -92,7 +92,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// ✅ UseCart Hook
+// UseCart Hook
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) throw new Error("useCart must be used within a CartProvider");

@@ -1,25 +1,20 @@
-"use client"; 
+"use client";
 
 import Sidebar from "@/components/SideBar";
+import AdminNavbar from "@/components/AdminNavbar"; 
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext"; 
 import { Toaster } from "react-hot-toast"; 
 import { usePathname } from "next/navigation";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname(); 
-
-  // Hide sidebar on admin pages and form pages
-  const isHiddenPage = pathname.startsWith("/admin/dashboard") || pathname.startsWith("/admin/login");
-
   return (
     <html lang="en">
       <body>
         <AuthProvider>  
           <CartProvider>
-            {!isHiddenPage && <Sidebar />} 
-            {children}
+            <LayoutContent>{children}</LayoutContent> 
             <Toaster 
               position="top-center"
               toastOptions={{
@@ -36,5 +31,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </AuthProvider>
       </body>
     </html>
+  );
+}
+
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { isAdmin, loading } = useAuth();
+
+  if (loading) return null; // Prevents UI flickering during auth check
+
+  // Show AdminNavbar on admin pages except /admin/login
+  const isAdminPage = pathname.startsWith("/admin/") && pathname !== "/admin/login";
+
+  return (
+    <>
+      {isAdminPage && isAdmin && <AdminNavbar />} 
+      {!isAdminPage && <Sidebar />} 
+
+      {children}
+    </>
   );
 }
