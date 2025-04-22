@@ -129,12 +129,6 @@ const MenuItemsPage = () => {
       <h1 className="page-title text-2xl font-bold mb-4">Manage Menu Items</h1>
   
       <Button className="add-item-btn mb-4" onClick={handleAddNew}>Add New Item</Button>
-
-       {/* Overlay */}
-    {showModal && (
-      <div className="modal-overlay" onClick={() => setShowModal(false)}></div>
-    )}
-
   
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
@@ -206,7 +200,7 @@ const MenuItemsPage = () => {
           </button>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button variant="secondary" onClick={() => setShowModal(false)} className="button-spacing">
             Cancel
           </Button>
           <Button variant="primary" onClick={() => { handleSave(); setShowModal(false); }}>
