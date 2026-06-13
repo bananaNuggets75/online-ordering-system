@@ -19,8 +19,6 @@ export default function CheckOutPage() {
 
   useEffect(() => {
     setMounted(true);
-    const unsubscribe = auth.onAuthStateChanged(setUser);
-    return () => unsubscribe();
   }, []);
 
   if (!mounted) return null;
@@ -31,11 +29,6 @@ export default function CheckOutPage() {
     if (loading) return; // Prevent double submission
     if (cart.length === 0) {
       toast.error("Your cart is empty!");
-      return;
-    }
-    if (!user) {
-      toast.error("Please log in to place an order.");
-      router.push("/login");
       return;
     }
 
@@ -57,7 +50,6 @@ export default function CheckOutPage() {
   
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
-        userId: user.uid,
         customerInfo: {
           name: trimmedName,
           contact: trimmedContact,

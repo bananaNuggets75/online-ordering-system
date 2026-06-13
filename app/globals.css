@@ -2213,3 +2213,114 @@ button:disabled {
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
+
+/* ============================================================
+   WARM AMBER THEME
+   Authoritative palette. Placed at the end so it overrides the
+   older scattered :root / dark-mode blocks above (later source
+   order wins). Everything that uses var(--primary) etc. updates
+   from here. Keeps one consistent light theme for the QR site.
+   ============================================================ */
+:root {
+  --background: #FFFBF5;   /* warm off-white page */
+  --foreground: #FFFFFF;
+  --surface: #FFFFFF;      /* cards */
+  --primary: #F59E0B;      /* amber */
+  --primary-dark: #B45309; /* deep amber */
+  --border-color: #ECE3D5; /* warm border */
+  --text-color: #1F2937;   /* charcoal */
+  --text-muted: #6B7280;
+  --button-bg: #F59E0B;
+  --button-text: #1F2937;
+  --success: #16A34A;
+  --danger: #DC2626;
+  /* aux vars referenced elsewhere in this file */
+  --bg-color: #FFFBF5;
+  --secondary-bg: #FFFFFF;
+  --hover-bg: #FFF3DE;
+  --price-color: #B45309;
+}
+
+/* Keep the same warm theme even when the OS prefers dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #FFFBF5;
+    --foreground: #FFFFFF;
+    --surface: #FFFFFF;
+    --border-color: #ECE3D5;
+    --text-color: #1F2937;
+    --text-muted: #6B7280;
+    --button-bg: #F59E0B;
+    --button-text: #1F2937;
+    --bg-color: #FFFBF5;
+    --secondary-bg: #FFFFFF;
+    --hover-bg: #FFF3DE;
+    --price-color: #B45309;
+  }
+}
+
+/* Re-theme legacy accent colors (purple/teal) to the amber palette */
+.submit-button,
+.login-button {
+  background: var(--primary);
+  color: var(--button-text);
+}
+.submit-button:hover,
+.login-button:hover {
+  background: var(--primary-dark);
+  color: #fff;
+}
+.forgot-password,
+.register-link a,
+.login-link a {
+  color: var(--primary-dark);
+}
+.option-card.selected {
+  background: var(--primary);
+  border-color: var(--primary-dark);
+}
+.status-pending {
+  color: var(--primary-dark);
+}
+
+/* ---------- UX polish (subtle, applies site-wide) ---------- */
+button,
+.home-button,
+.add-to-cart,
+.checkout-btn,
+.clear-cart-btn,
+.submit-button,
+.login-button,
+.back-button {
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.05s ease, box-shadow 0.2s ease;
+}
+button:active {
+  transform: translateY(1px);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Amber focus ring for inputs (accessibility + clarity) */
+.input-field:focus,
+.form-input:focus,
+.search-bar input:focus,
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+}
+
+/* Lift menu cards on hover for a more tactile feel */
+.menu-item,
+.menu-card,
+.order-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.menu-item:hover,
+.menu-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(180, 83, 9, 0.12);
+}
