@@ -26,6 +26,7 @@ interface MenuItem {
   description: string;
   price?: number;
   isOutOfStock?: boolean;
+  stock?: number;
   image: string;
   isAvailable: boolean;
   options?: Option[];
@@ -50,12 +51,16 @@ const MenuPage: React.FC = () => {
       (snapshot) => {
         const items = snapshot.docs.map((doc) => {
           const data = doc.data() as DocumentData;
+          const stock = typeof data.stock === "number" ? data.stock : undefined;
+          const unavailable = data.isAvailable === false;
+          const soldOut = typeof stock === "number" && stock <= 0;
           return {
             id: doc.id,
             name: data.name || "Unnamed Item",
             description: data.description || "No description available",
             price: data.price ?? 0,
-            isOutOfStock: data.isAvailable !== undefined ? !data.isAvailable : false,
+            stock,
+            isOutOfStock: unavailable || soldOut,
             image: data.image || "/placeholder.png",
             options: data.options || [],
             flavors: data.flavors || [],
@@ -126,6 +131,9 @@ const MenuPage: React.FC = () => {
               <div className="menu-item-content">
                 <h3>{item.name}</h3>
                 <p className="menu-item-description">{item.description}</p>
+                {!item.isOutOfStock && typeof item.stock === "number" && item.stock <= 5 && (
+                  <p className="low-stock-hint">Only {item.stock} left!</p>
+                )}
               </div>
 
               {item.isOutOfStock && <div className="out-of-stock-badge">Out of Stock</div>}
