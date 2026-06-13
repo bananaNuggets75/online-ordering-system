@@ -35,7 +35,7 @@ const MenuItemsPage = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser || currentUser.uid !== ADMIN_UID) {
-        router.replace("/admin/login");
+        router.replace("/");
       } else {
         setAuthChecked(true);
       }
@@ -205,8 +205,9 @@ const MenuItemsPage = () => {
                   const updatedOptions = newItem.options.filter((_, idx) => idx !== index);
                   setNewItem({ ...newItem, options: updatedOptions });
                 }}
+                aria-label="Remove option"
               >
-                ×
+                <i className="fas fa-xmark" />
               </button>
             </div>
           ))}

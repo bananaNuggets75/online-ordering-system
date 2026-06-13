@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
-const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID; 
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 const AdminLogin = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!ADMIN_UID) {
@@ -70,7 +70,7 @@ const AdminLogin = () => {
             disabled={loading}
           />
         </div>
-        <button 
+        <button
           type="submit"
           className={`login-button ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
           disabled={loading}
@@ -80,6 +80,6 @@ const AdminLogin = () => {
       </form>
     </div>
   );
-}
+};
 
 export default AdminLogin;
