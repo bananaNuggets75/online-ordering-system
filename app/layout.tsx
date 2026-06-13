@@ -36,9 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isAdmin, loading } = useAuth();
-
-  if (loading) return null; // Prevents UI flickering during auth check
+  const { isAdmin } = useAuth();
 
   // Show AdminNavbar on admin pages except /admin/login
   const isAdminPage = pathname.startsWith("/admin/") && pathname !== "/admin/login";

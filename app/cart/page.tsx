@@ -4,14 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
-import { db, auth } from "@/lib/firebase";
-import { User } from "firebase/auth";
+import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-export default function CheckOutPage() {  
+export default function CheckOutPage() {
   const { cart, removeFromCart, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [deliveryType, setDeliveryType] = useState("Pickup");
