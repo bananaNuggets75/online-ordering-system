@@ -43,17 +43,17 @@ const OrderStatusPage = () => {
         };
       }) as Order[];
   
-      // ✅ Filter out completed orders, but DO NOT change queue numbers
+      // Filter out completed orders, but DO NOT change queue numbers
       const activeOrders = ordersData.filter((order) => order.status !== "Completed");
   
-      // ✅ Use Firestore queue numbers directly
+      // Use Firestore queue numbers directly
       const updatedOrders = activeOrders.map((order) => ({
         ...order,
         status: order.status ?? "Pending",
         queueNumber: order.queueNumber ?? null,
       }));
   
-      // ✅ Compare previous orders with new ones to detect status change
+      // Compare previous orders with new ones to detect status change
       setOrders((prevOrders) => {
         prevOrders.forEach((prevOrder) => {
           const newOrder = updatedOrders.find((o) => o.id === prevOrder.id);
@@ -74,7 +74,7 @@ const OrderStatusPage = () => {
   }, []);
   
 
-  // 🔊 Function to play notification sound when order status updates
+  // Function to play notification sound when order status updates
   const playNotificationSound = () => {
     const audio = new Audio("/new-order.mp3");
     audio.play().catch((error) => console.error("Audio playback failed:", error));

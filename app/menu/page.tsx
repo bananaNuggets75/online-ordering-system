@@ -59,7 +59,7 @@ const MenuPage: React.FC = () => {
   };
   
 
-  // ✅ Real-time fetch from Firebase with error handling
+  // Real-time fetch from Firebase with error handling
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, "menu"),
@@ -92,7 +92,7 @@ const MenuPage: React.FC = () => {
     return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
-  // ✅ Handle Add to Cart with required field checks
+  // Handle Add to Cart with required field checks
   const handleAddToCart = () => {
     if (!selectedItem) return;
 
