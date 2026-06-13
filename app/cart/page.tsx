@@ -14,6 +14,7 @@ export default function CheckOutPage() {
   const [contact, setContact] = useState("");
   const [deliveryType, setDeliveryType] = useState("Pickup");
   const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -29,6 +30,10 @@ export default function CheckOutPage() {
     if (loading) return; // Prevent double submission
     if (cart.length === 0) {
       toast.error("Your cart is empty!");
+      return;
+    }
+    if (!agreed) {
+      toast.error("Please agree to the Terms before placing your order.");
       return;
     }
 
@@ -223,11 +228,28 @@ export default function CheckOutPage() {
           {/* Order Summary & Buttons */}
           <div className="mt-4">
             <p className="text-xl font-bold">Total: ₱{totalPrice.toFixed(2)}</p>
+
+            <label className="tos-agreement">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+              />
+              <span>
+                Orders are final once placed. I confirm my details are correct and
+                agree to the order Terms.
+              </span>
+            </label>
+
             <div className="flex gap-2 mt-2">
               <button className="clear-cart-btn" onClick={clearCart}>
                 Clear Cart
               </button>
-              <button className="checkout-btn" onClick={placeOrder} disabled={loading}>
+              <button
+                className="checkout-btn"
+                onClick={placeOrder}
+                disabled={loading || !agreed}
+              >
                 {loading ? "Placing Order..." : "Place Order"}
               </button>
             </div>

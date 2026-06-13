@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { usePathname } from "next/navigation";
 
 const AdminNavbar = () => {
   const { logout, isAdmin } = useAuth();
-  const pathname = usePathname();
 
-  // Hide the navbar on the login page
-  if (pathname === "/admin/login") {
-    return null;
-  }
-
-  // If not admin, don't render the navbar (optional based on your use case)
+  // Only render for a signed-in admin (so it never shows on the login page).
   if (!isAdmin) {
     return null;
   }

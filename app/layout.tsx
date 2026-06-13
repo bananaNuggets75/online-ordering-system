@@ -19,6 +19,12 @@ import { usePathname } from "next/navigation";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={poppins.variable}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        />
+      </head>
       <body>
         <AuthProvider>  
           <CartProvider>
@@ -46,8 +52,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isAdmin } = useAuth();
 
-  // Show AdminNavbar on admin pages except /admin/login
-  const isAdminPage = pathname.startsWith("/admin/") && pathname !== "/admin/login";
+  // Admin pages get the AdminNavbar (when signed in as admin) instead of the
+  // customer sidebar. The login page shows neither (admin isn't signed in yet).
+  const isAdminPage = pathname.startsWith("/admin/");
 
   return (
     <>

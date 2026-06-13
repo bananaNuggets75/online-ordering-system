@@ -46,7 +46,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser || currentUser.uid !== ADMIN_UID) {
-        router.push("/admin/login");
+        router.push("/");
       } else {
         setUser(currentUser);
       }
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
       const updatedOrders = snapshot.docs.map((doc) => {
         const data = doc.data();
-        const items = data.items || []; // 🔹 Get items array from Firestore
+        const items = data.items || []; // Get items array from Firestore
   
         // Compute total price by multiplying each item's price and quantity
         const totalPrice = items.reduce((sum: number, item: { price: number; quantity: number }) => {
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
         };
       });
 
-      // 🔊 **Detect New Orders and Play Sound**
+      // **Detect New Orders and Play Sound**
       if (updatedOrders.length > previousOrderCount) {
         console.log("New order detected! Playing notification sound...");
         playNotificationSound();
