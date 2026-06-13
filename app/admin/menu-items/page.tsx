@@ -14,6 +14,7 @@ interface MenuItem {
   image: string;
   inStock: boolean;
   isAvailable: boolean;
+  stock: number; // units left in inventory
   options: { size: string; price: number }[];
   flavors: { name: string; isOutOfStock: boolean }[];
   price?: number; // or maybe just add an option array for chewy soda also
@@ -23,7 +24,7 @@ const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 const MenuItemsPage = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [newItem, setNewItem] = useState({ name: "", image: "", options: [{ size: "", price: 0 }] });
+  const [newItem, setNewItem] = useState({ name: "", image: "", stock: 0, options: [{ size: "", price: 0 }] });
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
@@ -56,6 +57,7 @@ const MenuItemsPage = () => {
           image: data.image || "",
           inStock: data.inStock ?? true,
           isAvailable: data.isAvailable ?? true,
+          stock: typeof data.stock === "number" ? data.stock : 0,
           options: Array.isArray(data.options) ? data.options : [],
           flavors: Array.isArray(data.flavors) ? data.flavors : [],
         };
@@ -81,18 +83,22 @@ const MenuItemsPage = () => {
         await updateDoc(doc(db, "menu", editingItem.id), {
           name: newItem.name,
           image: newItem.image || "",
+          stock: newItem.stock,
+          isAvailable: newItem.stock > 0,
           options: newItem.options,
         });
       } else {
         await addDoc(collection(db, "menu"), {
           name: newItem.name,
           image: newItem.image || "",
+          stock: newItem.stock,
           options: newItem.options,
           inStock: true,
+          isAvailable: newItem.stock > 0,
         });
       }
       fetchMenuItems();
-      setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
+      setNewItem({ name: "", image: "", stock: 0, options: [{ size: "", price: 0 }] });
       setEditingItem(null);
     } catch (error) {
       console.error("Error saving menu item:", error);
@@ -112,13 +118,13 @@ const MenuItemsPage = () => {
 
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item);
-    setNewItem({ name: item.name, image: item.image || "", options: item.options });
+    setNewItem({ name: item.name, image: item.image || "", stock: item.stock ?? 0, options: item.options });
     setShowModal(true);
   };
 
   const handleAddNew = () => {
     setEditingItem(null);
-    setNewItem({ name: "", image: "", options: [{ size: "", price: 0 }] });
+    setNewItem({ name: "", image: "", stock: 0, options: [{ size: "", price: 0 }] });
     setShowModal(true);
   };
 
@@ -157,7 +163,17 @@ const MenuItemsPage = () => {
             onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
             className="form-control mb-2 item-image-input"
           />
-  
+
+          <label className="form-label mb-1" style={{ fontWeight: 600 }}>Stock (units available)</label>
+          <input
+            type="number"
+            min={0}
+            placeholder="Stock quantity"
+            value={newItem.stock}
+            onChange={(e) => setNewItem({ ...newItem, stock: Math.max(0, Number(e.target.value)) })}
+            className="form-control mb-3 item-stock-input"
+          />
+
           {newItem.options.map((option, index) => (
             <div key={index} className="option-row d-flex gap-2 mb-2">
               <input
@@ -239,7 +255,13 @@ const MenuItemsPage = () => {
               </div>
   
               <h2 className="item-title text-lg font-semibold">{item.name}</h2>
-  
+
+              <span
+                className={`stock-badge ${item.stock <= 0 ? "stock-out" : item.stock <= 5 ? "stock-low" : "stock-ok"}`}
+              >
+                {item.stock <= 0 ? "Out of stock" : `${item.stock} left`}
+              </span>
+
               <div className="item-options text-gray-700">
                 {Array.isArray(item.options) && item.options.length > 0 ? (
                   item.options.map((option, idx) => (

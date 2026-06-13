@@ -66,7 +66,7 @@ const OrderStatusPage = () => {
         return updatedOrders;
       });
   
-      setOrders(updatedOrders);  // ✅ Fix: Only use `updatedOrders`
+      setOrders(updatedOrders);  //  Fix: Only use `updatedOrders`
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedOrders));
     });
   

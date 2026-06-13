@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
@@ -26,6 +25,7 @@ interface MenuItem {
   description: string;
   price?: number;
   isOutOfStock?: boolean;
+  stock?: number;
   image: string;
   isAvailable: boolean;
   options?: Option[];
@@ -36,11 +36,27 @@ interface MenuItem {
 // --- Component ---
 const MenuPage: React.FC = () => {
   const { addToCart } = useCart();
-  const router = useRouter();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedOption, setSelectedOption] = useState<Option | null>(null);
   const [selectedFlavor, setSelectedFlavor] = useState<string>("");
+
+  // Open the customization modal for an item (guards out-of-stock).
+  const openItem = (item: MenuItem) => {
+    if (item.isOutOfStock) {
+      toast.error(`${item.name} is out of stock!`);
+      return;
+    }
+    setSelectedItem(item);
+    setSelectedOption(null);
+    setSelectedFlavor("");
+  };
+
+  const closeModal = () => {
+    setSelectedItem(null);
+    setSelectedOption(null);
+    setSelectedFlavor("");
+  };
   
 
   // ✅ Real-time fetch from Firebase with error handling
@@ -50,12 +66,16 @@ const MenuPage: React.FC = () => {
       (snapshot) => {
         const items = snapshot.docs.map((doc) => {
           const data = doc.data() as DocumentData;
+          const stock = typeof data.stock === "number" ? data.stock : undefined;
+          const unavailable = data.isAvailable === false;
+          const soldOut = typeof stock === "number" && stock <= 0;
           return {
             id: doc.id,
             name: data.name || "Unnamed Item",
             description: data.description || "No description available",
             price: data.price ?? 0,
-            isOutOfStock: data.isAvailable !== undefined ? !data.isAvailable : false,
+            stock,
+            isOutOfStock: unavailable || soldOut,
             image: data.image || "/placeholder.png",
             options: data.options || [],
             flavors: data.flavors || [],
@@ -98,22 +118,24 @@ const MenuPage: React.FC = () => {
     setSelectedFlavor("");
   };
 
+  const priceLabel = selectedItem
+    ? selectedOption
+      ? `₱${selectedOption.price.toFixed(2)}`
+      : selectedItem.options && selectedItem.options.length > 0
+      ? `from ₱${Math.min(...selectedItem.options.map((o) => o.price)).toFixed(2)}`
+      : `₱${(selectedItem.price ?? 0).toFixed(2)}`
+    : "";
+
   return (
     <div className="menu-container">
-      <h1 className="text-center text-3xl font-bold mb-4">Menu</h1>
+      <h1>Menu</h1>
 
       <div className="menu-list">
         {menuItems.map((item) => (
           <div key={item.id} className={`menu-item ${item.isOutOfStock ? "out-of-stock" : ""}`}>
             <div
-              onClick={() => {
-                if (!item.isOutOfStock) {
-                  router.push(`/menu/${item.id}`);
-                } else {
-                  toast.error(`${item.name} is out of stock!`);
-                }
-              }}
-              className={`cursor-pointer ${item.isOutOfStock ? "pointer-events-none opacity-50" : ""}`}
+              onClick={() => openItem(item)}
+              className={`menu-item-clickable ${item.isOutOfStock ? "pointer-events-none" : ""}`}
             >
               <Image
                 src={item.image || "/placeholder.png"}
@@ -121,72 +143,69 @@ const MenuPage: React.FC = () => {
                 className="menu-item-image"
                 width={300}
                 height={200}
-                priority
               />
+              {item.isOutOfStock && <div className="out-of-stock-badge">Out of Stock</div>}
               <div className="menu-item-content">
                 <h3>{item.name}</h3>
                 <p className="menu-item-description">{item.description}</p>
+                {!item.isOutOfStock && typeof item.stock === "number" && item.stock <= 5 && (
+                  <p className="low-stock-hint">Only {item.stock} left!</p>
+                )}
               </div>
-
-              {item.isOutOfStock && <div className="out-of-stock-badge">Out of Stock</div>}
             </div>
 
             <button
               className="add-to-cart"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (item.isOutOfStock) {
-                  toast.error(`${item.name} is out of stock!`);
-                  return;
-                }
-                setSelectedItem(item);
-                setSelectedOption(null);
-                setSelectedFlavor("");
-              }}
+              onClick={() => openItem(item)}
               disabled={item.isOutOfStock}
             >
-              {item.isOutOfStock ? "Out of Stock" : "Add"}
+              {item.isOutOfStock ? "Out of Stock" : "Add to Cart"}
             </button>
           </div>
         ))}
       </div>
 
       {selectedItem && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="text-xl font-bold mb-4">{selectedItem.name}</h2>
-            <p className="text-gray-600 mb-2">{selectedItem.description}</p>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-hero">
+              <Image
+                src={selectedItem.image || "/placeholder.png"}
+                alt={selectedItem.name}
+                fill
+                sizes="440px"
+                className="modal-hero-img"
+              />
+            </div>
 
-            {selectedItem.options && selectedItem.options.length > 0 ? (
+            <h2 className="modal-title">{selectedItem.name}</h2>
+            <p className="modal-desc">{selectedItem.description}</p>
+            <p className="modal-price">{priceLabel}</p>
+
+            {selectedItem.options && selectedItem.options.length > 0 && (
               <div className="options-grid">
                 {selectedItem.options.map((option, index) => (
                   <button
                     key={index}
-                    className={`option-card ${selectedOption?.size === option.size ? "selected" : ""} ${option.isOutOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={`option-card ${selectedOption?.size === option.size ? "selected" : ""}`}
                     onClick={() => {
                       if (!option.isOutOfStock) setSelectedOption(option);
                     }}
                     disabled={option.isOutOfStock}
                   >
-                    <Image src={selectedItem.image} alt={option.size} width={100} height={80} />
-                    <p>{option.size}</p>
-                    <p className="text-green-600 font-bold">₱{option.price}</p>
-                    {option.isOutOfStock && <p className="text-red-500 font-bold">Out of Stock</p>}
+                    <span className="option-size">{option.size}</span>
+                    <span className="option-price">₱{option.price.toFixed(2)}</span>
+                    {option.isOutOfStock && <span className="option-oos">Out of stock</span>}
                   </button>
                 ))}
               </div>
-            ) : (
-              <button className="option-card" onClick={handleAddToCart} disabled={selectedItem.isOutOfStock}>
-                <Image src={selectedItem.image} alt={selectedItem.name} width={100} height={100} />
-                <p>₱{selectedItem.price}</p>
-              </button>
             )}
 
             {selectedItem.flavors && selectedItem.flavors.length > 0 && (
-              <div className="flavor-options mt-4">
-                <h3 className="text-lg font-bold mb-2">Choose a Flavor:</h3>
+              <div className="flavor-options">
+                <h3>Choose a Flavor</h3>
                 <select
-                  className="border p-2 rounded w-full bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="flavor-dropdown"
                   value={selectedFlavor || ""}
                   onChange={(e) => setSelectedFlavor(e.target.value)}
                 >
@@ -202,9 +221,20 @@ const MenuPage: React.FC = () => {
               </div>
             )}
 
-            <div className="modal-buttons mt-4">
-              <button onClick={handleAddToCart} className="confirm-btn" disabled={selectedItem.isOutOfStock || (selectedItem.options && selectedItem.options.length > 0 && !selectedOption)}>Confirm</button>
-              <button className="cancel-btn" onClick={() => setSelectedItem(null)}>Cancel</button>
+            <div className="modal-buttons">
+              <button className="cancel-btn" onClick={closeModal}>
+                Cancel
+              </button>
+              <button
+                onClick={handleAddToCart}
+                className="confirm-btn"
+                disabled={
+                  selectedItem.isOutOfStock ||
+                  (selectedItem.options && selectedItem.options.length > 0 && !selectedOption)
+                }
+              >
+                Add to Cart
+              </button>
             </div>
           </div>
         </div>

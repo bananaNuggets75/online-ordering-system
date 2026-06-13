@@ -4,14 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useCart } from "@/context/CartContext";
-import { db, auth } from "@/lib/firebase";
-import { User } from "firebase/auth";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { collection, doc, runTransaction, serverTimestamp } from "firebase/firestore";
 
-export default function CheckOutPage() {  
+export default function CheckOutPage() {
   const { cart, removeFromCart, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [deliveryType, setDeliveryType] = useState("Pickup");
@@ -21,8 +19,6 @@ export default function CheckOutPage() {
 
   useEffect(() => {
     setMounted(true);
-    const unsubscribe = auth.onAuthStateChanged(setUser);
-    return () => unsubscribe();
   }, []);
 
   if (!mounted) return null;
@@ -33,11 +29,6 @@ export default function CheckOutPage() {
     if (loading) return; // Prevent double submission
     if (cart.length === 0) {
       toast.error("Your cart is empty!");
-      return;
-    }
-    if (!user) {
-      toast.error("Please log in to place an order.");
-      router.push("/login");
       return;
     }
 
@@ -56,35 +47,87 @@ export default function CheckOutPage() {
     }
   
     setLoading(true); // Disable button during request
-  
+
+    // Total units requested per menu item (a cart can hold the same item
+    // in several lines, e.g. different sizes/flavors).
+    const qtyById = cart.reduce<Record<string, number>>((acc, item) => {
+      acc[item.id] = (acc[item.id] || 0) + item.quantity;
+      return acc;
+    }, {});
+    const itemIds = Object.keys(qtyById);
+
+    const orderRef = doc(collection(db, "orders"));
+
     try {
-      const orderRef = await addDoc(collection(db, "orders"), {
-        userId: user.uid,
-        customerInfo: {
-          name: trimmedName,
-          contact: trimmedContact,
-          deliveryType,
-          deliveryLocation: deliveryType === "Delivery" ? trimmedLocation : "",
-        },
-        items: cart.map((item) => ({
-          id: item.id,
-          name: item.name,
-          size: item.size,
-          flavor: item.flavor || "No Flavor", // Ensure it's never undefined
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-        status: "Received",
-        timestamp: serverTimestamp(),
+      await runTransaction(db, async (transaction) => {
+        // Read every referenced menu item first (Firestore requires all
+        // reads before any writes inside a transaction).
+        const snaps = await Promise.all(
+          itemIds.map((id) => transaction.get(doc(db, "menu", id)))
+        );
+
+        // Validate availability / stock against live data.
+        snaps.forEach((snap, i) => {
+          const id = itemIds[i];
+          const name = cart.find((c) => c.id === id)?.name ?? "An item";
+          if (!snap.exists()) {
+            throw new Error(`"${name}" is no longer available.`);
+          }
+          const data = snap.data();
+          if (data.isAvailable === false) {
+            throw new Error(`"${data.name ?? name}" is currently unavailable.`);
+          }
+          if (typeof data.stock === "number" && data.stock < qtyById[id]) {
+            throw new Error(
+              data.stock <= 0
+                ? `"${data.name ?? name}" just sold out.`
+                : `Only ${data.stock} of "${data.name ?? name}" left.`
+            );
+          }
+        });
+
+        // Decrement stock for items that track inventory.
+        snaps.forEach((snap, i) => {
+          const id = itemIds[i];
+          const data = snap.data()!;
+          if (typeof data.stock === "number") {
+            const remaining = data.stock - qtyById[id];
+            transaction.update(doc(db, "menu", id), {
+              stock: remaining,
+              ...(remaining <= 0 ? { isAvailable: false } : {}),
+            });
+          }
+        });
+
+        // Create the order in the same atomic step.
+        transaction.set(orderRef, {
+          customerInfo: {
+            name: trimmedName,
+            contact: trimmedContact,
+            deliveryType,
+            deliveryLocation: deliveryType === "Delivery" ? trimmedLocation : "",
+          },
+          items: cart.map((item) => ({
+            id: item.id,
+            name: item.name,
+            size: item.size,
+            flavor: item.flavor || "No Flavor",
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          status: "Pending Payment",
+          timestamp: serverTimestamp(),
+        });
       });
-  
+
       sessionStorage.setItem("orderId", orderRef.id);
       clearCart();
       toast.success("Order Placed!");
       router.push("/checkout/confirm");
     } catch (error) {
-      toast.error("Failed to place order");
+      const message = error instanceof Error ? error.message : "Failed to place order";
+      toast.error(message);
       console.error("Order error:", error);
     } finally {
       setLoading(false); // Re-enable button
