@@ -8,24 +8,32 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Burger Icon */}
-      <button className="burger-menu" onClick={() => setIsOpen(!isOpen)}>
-        ☰
+      {/* Burger icon */}
+      <button className="burger-menu" onClick={() => setIsOpen(!isOpen)} aria-label="Open menu">
+        <i className="fas fa-bars" />
       </button>
 
       {/* Sidebar */}
       <div className={`sidebar ${isOpen ? "open" : ""}`}>
-        <button className="close-btn" onClick={() => setIsOpen(false)}>×</button>
+        <button className="close-btn" onClick={() => setIsOpen(false)} aria-label="Close menu">
+          <i className="fas fa-xmark" />
+        </button>
         <nav>
           <ul>
             <li>
-              <Link href="/menu" onClick={() => setIsOpen(false)}>🏠 Menu</Link>
+              <Link href="/menu" onClick={() => setIsOpen(false)}>
+                <i className="fas fa-utensils" /> Menu
+              </Link>
             </li>
             <li>
-              <Link href="/cart" onClick={() => setIsOpen(false)}>🛒 Cart</Link>
+              <Link href="/cart" onClick={() => setIsOpen(false)}>
+                <i className="fas fa-cart-shopping" /> Cart
+              </Link>
             </li>
             <li>
-              <Link href="/order-status" onClick={() => setIsOpen(false)}>📦 Order Status</Link>
+              <Link href="/order-status" onClick={() => setIsOpen(false)}>
+                <i className="fas fa-box" /> Order Status
+              </Link>
             </li>
           </ul>
         </nav>
