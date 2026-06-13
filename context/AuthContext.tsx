@@ -1,20 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
-interface User {
-  uid: string;
-  email: string;
-  role: "admin" | "user";
-  profilePic?: string;
-}
+// Single-admin app: the admin is identified by their Firebase Auth UID.
+// Customers never log in (they order anonymously after scanning the QR code).
+const ADMIN_UID = process.env.NEXT_PUBLIC_ADMIN_UID;
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
   loading: boolean;
   isAdmin: boolean;
   logout: () => Promise<void>;
@@ -23,56 +19,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser: FirebaseUser | null) => {
-      setLoading(true);
-      
-      if (currentUser && currentUser.email) {
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-  
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setUser({
-            uid: currentUser.uid,
-            email: currentUser.email,
-            role: userData.role,
-            profilePic: userData.profilePic || "/default-avatar.png",
-          });
-          setIsAdmin(userData.role === "admin");
-        } else {
-          await setDoc(userRef, { role: "user", profilePic: "/default-avatar.png" });
-          setUser({
-            uid: currentUser.uid,
-            email: currentUser.email,
-            role: "user",
-            profilePic: "/default-avatar.png",
-          });
-          setIsAdmin(false);
-        }
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-      }
-  
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAdmin(!!currentUser && currentUser.uid === ADMIN_UID);
       setLoading(false);
     });
-  
+
     return () => unsubscribe();
   }, []);
-  
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/admin/login");
-    }
-  }, [loading, user, router]);
-  
-  
 
   const logout = async () => {
     await signOut(auth);
@@ -83,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin, logout }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
