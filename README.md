@@ -1,84 +1,78 @@
 # Online Ordering System
 
-
-A full-stack web app for browsing a menu, placing orders, and tracking them in real time — with a separate admin area for managing menu items and incoming orders. Built with [Next.js](https://nextjs.org) (App Router), [Firebase](https://firebase.google.com), and TypeScript.
-
+A web app for a food stall ("Food Dae") where customers scan a QR code, browse
+the menu, and place orders — no customer login required. A separate, hidden
+admin area manages menu items, inventory, and incoming orders in real time.
+Built with [Next.js](https://nextjs.org) (App Router), [Firebase](https://firebase.google.com), and TypeScript.
 
 ## Features
 
-
-### Customers
-- **Browse the menu** with item details, sizes, and flavors
+### Customers (no account needed)
+- **Scan the QR code → browse the menu** with item images, sizes, and flavors
 - **Cart** that persists across page reloads (saved to `localStorage`)
-- **Checkout flow** with an order confirmation step
-- **Order tracking** to follow an order's status
-- **Accounts** — register, log in, and manage a profile (with profile picture)
-- Toast notifications for cart and account actions
-
+- **Anonymous checkout** — just enter name and contact at the cart; agree to a
+  short Terms confirmation before placing the order
+- **Order confirmation** with a queue number and GCash / over-the-counter payment
+- **Real-time order tracking** on the order-status page
 
 ### Admins
-- Separate **admin login** and **dashboard**
-- **Manage menu items** — add, edit, and update items, sizes, and flavors
-- Role-based access (`admin` vs `user`) enforced through Firebase Auth
-
+- **Hidden admin login** at a secret path (see `ADMIN_LOGIN_PATH` below)
+- **Dashboard** — live incoming orders, status updates, total revenue, archiving
+- **Manage menu items** — add/edit items, sizes, flavors, and **stock counts**
+- **Inventory** — stock is decremented atomically when an order is placed, so
+  items can't be oversold and sell out automatically at zero
 
 ## Tech Stack
-
 
 | Area | Technology |
 |------|------------|
 | Framework | Next.js 15 (App Router) + React 19 |
 | Language | TypeScript |
 | Auth & Database | Firebase Authentication + Cloud Firestore |
-| Image hosting | Cloudinary |
-| Styling | Tailwind CSS, Bootstrap / React-Bootstrap |
+| Images | Static files in `/public` (or any image URL) |
+| Styling | Tailwind CSS, custom design system, Poppins (`next/font`) |
+| Icons | Font Awesome |
 | Notifications | react-hot-toast |
-| HTTP | axios |
-
 
 ## Project Structure
 
-
 ```
 app/                 Next.js routes (App Router)
- menu/              Menu listing and item detail pages
- cart/              Shopping cart
- checkout/          Checkout and order confirmation
+ menu/              Menu listing (add-to-cart modal)
+ cart/              Cart + anonymous checkout
+ checkout/confirm/  Order confirmation, queue number, payment
  order/, track/     Order placement and tracking
- order-status/      Order status view
- login/, register/  Customer authentication
- profile/           User profile
- admin/             Admin login, dashboard, and menu management
-components/          Shared UI (Menu, SideBar, AdminNavbar)
+ order-status/      Real-time order status view
+ admin/[gate]/      Secret-path admin login
+ admin/dashboard/   Orders dashboard
+ admin/menu-items/  Menu + inventory management
+components/          Shared UI (SideBar, AdminNavbar)
 context/             React context providers (Auth, Cart)
-lib/                 Firebase, Cloudinary, and data-fetching helpers
-public/              Static assets
+lib/                 Firebase + data-fetching helpers
+scripts/             seedMenu.mjs — seed starter products
+public/              Static assets (menu images)
 ```
 
+> Customers never authenticate. The only login is the admin, identified by
+> their Firebase Auth UID (`NEXT_PUBLIC_ADMIN_UID`).
 
 ## Getting Started
 
-
 ### 1. Prerequisites
 - Node.js 18+ and npm
-- A [Firebase](https://console.firebase.google.com) project (Authentication + Firestore enabled)
-- A [Cloudinary](https://cloudinary.com) account (for menu images)
-
+- A [Firebase](https://console.firebase.google.com) project with **Authentication**
+  (Email/Password) and **Cloud Firestore** enabled
 
 ### 2. Install
-
 
 ```bash
 cd online-ordering-system
 npm install
 ```
 
-
 ### 3. Configure environment variables
 
-
-Create a `.env.local` file in the project root:
-
+Copy `.env.local.example` to `.env.local` and fill in your values:
 
 ```bash
 # Firebase (client — safe to expose)
@@ -89,30 +83,38 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
+# Firebase Auth UID of the admin account (Authentication > Users)
+NEXT_PUBLIC_ADMIN_UID=your_admin_uid
 
-# Cloudinary (server — keep secret)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+# Secret path segment for the admin login (server-only, NOT exposed to the
+# browser). The admin logs in at /admin/<this value>. Generate one with:
+#   openssl rand -hex 6
+ADMIN_LOGIN_PATH=your_secret_path
 ```
 
+> Firestore uses a `menu` collection for items and an `orders` collection for
+> orders. Create the admin user in Firebase Authentication, then put its UID in
+> `NEXT_PUBLIC_ADMIN_UID`.
 
-> Firestore should have a `menu` collection for items and a `users` collection for accounts. New sign-ups default to the `user` role; set `role: "admin"` on a user document to grant admin access.
+### 4. Seed the menu (optional)
 
+Populate the `menu` collection with starter products that use the images in
+`/public`:
 
-### 4. Run the dev server
+```bash
+node --env-file=.env.local scripts/seedMenu.mjs
+```
 
+### 5. Run the dev server
 
 ```bash
 npm run dev
 ```
 
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
+Open [http://localhost:3000](http://localhost:3000). The admin logs in at
+`http://localhost:3000/admin/<ADMIN_LOGIN_PATH>`.
 
 ## Available Scripts
-
 
 | Command | Description |
 |---------|-------------|
@@ -120,15 +122,17 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `npm run build` | Build for production |
 | `npm run start` | Run the production build |
 | `npm run lint` | Run ESLint |
-
+| `node --env-file=.env.local scripts/seedMenu.mjs` | Seed/refresh starter menu items |
 
 ## Deployment
 
+Deploy on [Vercel](https://vercel.com/new). Before deploying:
 
-The easiest way to deploy is [Vercel](https://vercel.com/new). Add the same environment variables in your Vercel project settings before deploying. See the [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying) for details.
-
+1. Add **all** environment variables (including `NEXT_PUBLIC_ADMIN_UID` and the
+   server-only `ADMIN_LOGIN_PATH`) in your Vercel project settings.
+2. In Firebase Console → Authentication → Settings → **Authorized domains**, add
+   your Vercel domain so admin login works in production.
 
 ## Developer
-
 
 - **Kenan Ben Polgo**
